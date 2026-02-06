@@ -75,8 +75,12 @@
         <div class="window">
             <div class="window-title">Welcome</div>
             <div class="window-content">
-                <p>Click the button to continue.</p>
-                <button id="close-btn">Close</button>
+                <h1>Under Construction</h1>
+                <p>
+                    This work is whatever, I am just learning FM instruments.
+
+                </p>
+                <button id="close-btn">I Agree</button>
             </div>
         </div>
     </div>
@@ -113,38 +117,12 @@
 </body>
 <script>
     const overlay = document.getElementById('overlay');
-    const closeBtn = document.getElementById('close-btn');
+    const welcomeScreenCloser = document.getElementById('close-btn');
 
-    closeBtn.addEventListener('click', () => {
+    welcomeScreenCloser.addEventListener('click', () => {
         initAudio();
         overlay.style.display = 'none';
     });
-
-    function rateToTime(rate, maxRate, minTime, maxTime, alainfinity) {
-        if (rate <= 0) return alainfinity; // special case (SR=0)
-        const norm = rate / maxRate;    // 0–1
-        return maxTime * Math.pow(minTime / maxTime, norm);
-    }
-
-    function ARtoTime(AR) {
-        return rateToTime(AR, 31, 0.002, 1.0, 1.0); // 2ms .. 1s Inf=1
-    }
-
-    function DRtoTime(DR) {
-        return rateToTime(DR, 31, 0.01, 2.0, 3.0);  // 10ms .. 2s Inf=1
-    }
-
-    function SRtoTime(SR) {
-        return rateToTime(SR, 31, 0.5, 30.0, 60.0);  // 0.5s .. 30s
-    }
-
-    function RRtoTime(RR) {
-        return rateToTime(RR, 31, 0.01, 3.0, 5.0);  // 10ms .. 3s
-    }
-
-    function SLtoLevel(SL) {
-        return SL / 15;
-    }
 
     class FMEnvelope extends HTMLElement {
         constructor() {
@@ -280,52 +258,81 @@
         drawScope();
     }
 
-    function onNotePress(opGain, env, peak = 1.0) {
-        const now = ctx.currentTime;
-
-        const atk = ARtoTime(env.AR);
-        const dec = DRtoTime(env.DR);
-        const susLvl = SLtoLevel(env.SL);
-        const susTime = SRtoTime(env.SR);
-
-        const g = opGain.gain;
-        g.cancelScheduledValues(now);
-        g.setValueAtTime(0, now);
-
-        // Attack
-        g.exponentialRampToValueAtTime(peak, now + atk);
-
-        // Decay to sustain level
-        g.exponentialRampToValueAtTime(
-            peak * susLvl,
-            now + atk + dec
-        );
-
-        // Sustain decay (SR)
-        if (env.SR > 0) {
-            g.linearRampToValueAtTime(
-                0.0001,
-                now + atk + dec + susTime
-            );
+    /* ZONE: Keyboard */ {
+        function rateToTime(rate, maxRate, minTime, maxTime, alainfinity) {
+            if (rate <= 0) return alainfinity; // special case (SR=0)
+            const norm = rate / maxRate;    // 0–1
+            return maxTime * Math.pow(minTime / maxTime, norm);
         }
-        // else SR=0 -> hold forever
+
+        function ARtoTime(AR) {
+            return rateToTime(AR, 31, 0.002, 1.0, 1.0); // 2ms .. 1s Inf=1
+        }
+
+        function DRtoTime(DR) {
+            return rateToTime(DR, 31, 0.01, 2.0, 3.0);  // 10ms .. 2s Inf=1
+        }
+
+        function SRtoTime(SR) {
+            return rateToTime(SR, 31, 0.5, 30.0, 60.0);  // 0.5s .. 30s
+        }
+
+        function RRtoTime(RR) {
+            return rateToTime(RR, 31, 0.01, 3.0, 5.0);  // 10ms .. 3s
+        }
+
+        function SLtoLevel(SL) {
+            return SL / 15;
+        }
+
+        function onNotePress(opGain, env, peak = 1.0) {
+            const now = ctx.currentTime;
+
+            const atk = ARtoTime(env.AR);
+            const dec = DRtoTime(env.DR);
+            const susLvl = SLtoLevel(env.SL);
+            const susTime = SRtoTime(env.SR);
+
+            const g = opGain.gain;
+            g.cancelScheduledValues(now);
+            g.setValueAtTime(0, now);
+
+            // Attack
+            g.exponentialRampToValueAtTime(peak, now + atk);
+
+            // Decay to sustain level
+            g.exponentialRampToValueAtTime(
+                peak * susLvl,
+                now + atk + dec
+            );
+
+            // Sustain decay (SR)
+            if (env.SR > 0) {
+                g.linearRampToValueAtTime(
+                    0.0001,
+                    now + atk + dec + susTime
+                );
+            }
+            // else SR=0 -> hold forever
+        }
+
+        function onNoteRelease(opGain, env) {
+            const now = ctx.currentTime;
+            const relTime = RRtoTime(env.RR);
+
+            const g = opGain.gain;
+
+            // Stop whatever the envelope was doing
+            g.cancelScheduledValues(now);
+
+            // Release to silence
+            g.linearRampToValueAtTime(0.0001, now + relTime);
+            setTimeout(() => {
+                drawScope(); // One last time when graph is still
+            }, relTime * 1_000+ 100);
+        }
     }
 
-    function onNoteRelease(opGain, env) {
-        const now = ctx.currentTime;
-        const relTime = RRtoTime(env.RR);
-
-        const g = opGain.gain;
-
-        // Stop whatever the envelope was doing
-        g.cancelScheduledValues(now);
-
-        // Release to silence
-        g.linearRampToValueAtTime(0.0001, now + relTime);
-        setTimeout(() => {
-            drawScope(); // One last time when graph is still
-        }, relTime * 1_000+ 100);
-    }
 
     let lastTrace = null;
     function drawScope() {
