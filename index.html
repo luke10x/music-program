@@ -15,7 +15,7 @@
         }
 
         .window {
-            max-width: 500px;
+            max-width: 100%;
             border-radius: 8px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
             overflow: hidden;
@@ -47,7 +47,6 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.9);
-            /* semi-transparent dark overlay */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -67,6 +66,18 @@
         .window-content button:hover {
             background-color: #555;
         }
+
+        .note-key[data-octave='2'] {
+            color: #bbb;
+        }
+        .note-key[data-octave='4'] {
+            color: #bbb;
+        }
+        label {
+            font-size: 12px;
+            padding-bottom: 8px;
+        }
+
     </style>
 </head>
 
@@ -77,8 +88,7 @@
             <div class="window-content">
                 <h1>Under Construction</h1>
                 <p>
-                    This work is whatever, I am just learning FM instruments.
-
+                    You can create the sound using FM modulation.
                 </p>
                 <button id="close-btn">I Agree</button>
             </div>
@@ -95,17 +105,43 @@
 
     <div style="display: flex; gap: 8px;">
         <div class="window">
-            <div class="window-title">Instrument</div>
+            <div class="window-title">OP0</div>
             <div class="window-content">
-                <input id="slider" type="range" min="0" max="100" value="50">
-                <fm-envelope></fm-envelope>
+                <label>
+                    TL
+                    <input id="slider-0" type="range" min="0" max="100" value="50">
+                </label>
+                <fm-envelope id="op0-env"></fm-envelope>
             </div>
         </div>
         <div class="window">
-            <div class="window-title">Instrument</div>
+            <div class="window-title">OP1</div>
             <div class="window-content">
-                <input id="slider" type="range" min="0" max="100" value="50">
-                <fm-envelope></fm-envelope>
+                <label>
+                    TL
+                    <input id="slider-1" type="range" min="0" max="100" value="50">
+                </label>
+                <fm-envelope id="op1-env"></fm-envelope>
+            </div>
+        </div>
+        <div class="window">
+            <div class="window-title">OP2</div>
+            <div class="window-content">
+                <label>
+                    TL
+                    <input id="slider-2" type="range" min="0" max="100" value="50">
+                </label>
+                <fm-envelope id="op2-env"></fm-envelope>
+            </div>
+        </div>
+        <div class="window">
+            <div class="window-title">OP3</div>
+            <div class="window-content">
+                <label>
+                    TL
+                    <input id="slider-3" type="range" min="0" max="100" value="50">
+                </label>
+                <fm-envelope id="op3-env"></fm-envelope>
             </div>
         </div>
     </div>
@@ -113,13 +149,23 @@
     <div class="window">
         <div class="window-title">Input</div>
         <div class="window-content">
-            <button id="note-c-natural-3" class="note-key" data-note="C" data-octave="3">C3</button>
-            <button id="note-d-natural-3" class="note-key" data-note="D" data-octave="3">D3</button>
-            <button id="note-e-natural-3" class="note-key" data-note="E" data-octave="3">E3</button>
-            <button id="note-f-natural-3" class="note-key" data-note="F" data-octave="3">F3</button>
-            <button id="note-g-natural-3" class="note-key" data-note="G" data-octave="3">G3</button>
-            <button id="note-a-natural-3" class="note-key" data-note="A" data-octave="3">A3</button>
-            <button id="note-b-natural-3" class="note-key" data-note="B" data-octave="3">B3</button>
+            <button class="note-key" data-note="E" data-octave="2">E2</button>
+            <button class="note-key" data-note="F" data-octave="2">F2</button>
+            <button class="note-key" data-note="G" data-octave="2">G2</button>
+            <button class="note-key" data-note="A" data-octave="2">A2</button>
+            <button class="note-key" data-note="B" data-octave="2">B2</button>
+            <button class="note-key" data-note="C" data-octave="3">C3</button>
+            <button class="note-key" data-note="D" data-octave="3">D3</button>
+            <button class="note-key" data-note="E" data-octave="3">E3</button>
+            <button class="note-key" data-note="F" data-octave="3">F3</button>
+            <button class="note-key" data-note="G" data-octave="3">G3</button>
+            <button class="note-key" data-note="A" data-octave="3">A3</button>
+            <button class="note-key" data-note="B" data-octave="3">B3</button>
+            <button class="note-key" data-note="C" data-octave="4">C4</button>
+            <button class="note-key" data-note="D" data-octave="4">D4</button>
+            <button class="note-key" data-note="E" data-octave="4">E4</button>
+            <button class="note-key" data-note="F" data-octave="4">F4</button>
+            <button class="note-key" data-note="G" data-octave="4">G4</button>
         </div>
     </div>
 </body>
@@ -227,47 +273,90 @@
 
     const buffer = new Uint8Array(fftSize);
     const scopeCanvas = document.getElementById('scope');
-    const slider = document.getElementById('slider');
-    const env = document.querySelector('fm-envelope');
+    const gainSliders = [
+        document.getElementById('slider-0'),
+        document.getElementById('slider-1'),
+        document.getElementById('slider-2'),
+        document.getElementById('slider-3'),
+    ];
 
-    let op3;
-    let op4;
     let op3Gain;
     let op4Gain;
     let analyser;
+    let ops;
+    let opGains;
+    const peaks = gainSliders.map(s => s.value);
+    let envs = [
+        document.querySelector('fm-envelope#op0-env'),
+        document.querySelector('fm-envelope#op1-env'),
+        document.querySelector('fm-envelope#op2-env'),
+        document.querySelector('fm-envelope#op3-env'),
+    ];
 
-    function initAudio() {
+    const FM_ALGORITHMS = {
+        chain: [
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [3, "out"],
+        ],
+
+        // example future algorithm
+        // two carriers, shared modulator
+        parallel: [
+            [0, 2],
+            [1, 2],
+            [2, "out"],
+            [3, "out"],
+        ],
+    };
+
+    function initAudio(algorithmName = "chain") {
         ctx = new AudioContext();
-        op3Gain = ctx.createGain();
-        op4Gain = ctx.createGain();
 
-        op4 = ctx.createOscillator();
-        op4.type = 'sine';
-        op4.frequency.value = 440;
+        // Create operators and gains
+        ops = Array.from({ length: 4 }, () => ctx.createOscillator());
+        opGains = Array.from({ length: 4 }, () => ctx.createGain());
 
-        op3 = ctx.createOscillator();
-        op3.type = 'sine';
-        op3.frequency.value = 880;
+        for (const op of ops) {
+            op.type = "sine";
+            op.frequency.value = 440;
+        }
 
         analyser = ctx.createAnalyser();
         analyser.fftSize = 256;
 
-        op3.connect(op3Gain);
-        op3Gain.connect(op4.frequency);
-        op4.connect(op4Gain);
+        // Build algorithm
+        const algorithm = FM_ALGORITHMS[algorithmName];
 
-        op4Gain.connect(analyser);
+        for (const [src, dst] of algorithm) {
+            if (dst === "out") {
+                // Carrier path
+                ops[src].connect(opGains[src]);
+                opGains[src].connect(analyser);
+            } else {
+                // FM modulation path
+                ops[src].connect(opGains[src]);
+                opGains[src].connect(ops[dst].frequency);
+            }
+        }
+
         analyser.connect(ctx.destination);
 
-        op3.start();
-        op4.start();
-
-        op4Gain.gain.setValueAtTime(0, ctx.currentTime);
+        // Start ops
+        const now = ctx.currentTime;
+        for (const op of ops) op.start(now);
+        for (const g of opGains) g.gain.setValueAtTime(0, now);
 
         drawScope();
     }
 
     /* ZONE: Keyboard */ {
+        // TODO: these better suit with envelope
+        // But I am not too sure if they belong to component,
+        // Maybe some separate zone can be introduced for the
+        // Envelopes and it could hold the component and
+        // those value mappers
         function rateToTime(rate, maxRate, minTime, maxTime, alainfinity) {
             if (rate <= 0) return alainfinity; // special case (SR=0)
             const norm = rate / maxRate;    // 0–1
@@ -307,18 +396,18 @@
             g.setValueAtTime(0, now);
 
             // Attack
-            g.exponentialRampToValueAtTime(peak, now + atk);
+            g.linearRampToValueAtTime(Math.max(0.001, peak), now + atk);
 
             // Decay to sustain level
-            g.exponentialRampToValueAtTime(
-                peak * susLvl,
+            g.linearRampToValueAtTime(
+                Math.max(0.001, peak * susLvl),
                 now + atk + dec
             );
 
             // Sustain decay (SR)
             if (env.SR > 0) {
                 g.linearRampToValueAtTime(
-                    0.0001,
+                    0.001,
                     now + atk + dec + susTime
                 );
             }
@@ -335,7 +424,7 @@
             g.cancelScheduledValues(now);
 
             // Release to silence
-            g.linearRampToValueAtTime(0.0001, now + relTime);
+            g.linearRampToValueAtTime(0.001, now + relTime);
             setTimeout(() => {
                 drawScope(); // One last time when graph is still
             }, relTime * 1_000+ 100);
@@ -367,12 +456,14 @@
         ctx.stroke();
     }
 
-    slider.addEventListener('input', () => {
-        const tl = slider.value / 100;   // 0–1 (TL knob)
-        const fmDepth = tl * tl * 1200;  // squared = FM loudness curve
-        op3Gain.gain.setValueAtTime(fmDepth, ctx.currentTime);
-        console.log('slider changed to ', slider.value)
-    });
+    for (let i = 0; i < 4; i++) {
+
+        const slider = gainSliders[i];
+        slider.addEventListener('input', () => {
+            peaks[i] = slider.value;
+            console.log(`slider[${i}] changed to ${slider.value}`);
+        });
+    }
 
     function noteToFrequency(note, octave) {
         // Define the notes and their corresponding semitone offsets from A4
@@ -395,19 +486,36 @@
 
     document.querySelectorAll('button.note-key').forEach(button => {
         button.addEventListener('mousedown', () => {
-
             const note = button.dataset.note;
             const octave = button.dataset.octave;
             const frequency = noteToFrequency(note, octave);
-            
-            op4.frequency.linearRampToValueAtTime(frequency, ctx.currentTime + 0.001);
-            op3.frequency.linearRampToValueAtTime(frequency * 2, ctx.currentTime + 0.001);
+            const now = ctx.currentTime;
 
-            onNotePress(op4Gain, env.params, 1.0);
+            ops[3].frequency.setValueAtTime(frequency, now);
+            ops[2].frequency.setValueAtTime(frequency * 2, now);
+            ops[1].frequency.setValueAtTime(frequency * 0.5, now);
+            ops[0].frequency.setValueAtTime(frequency * 8, now);
+
+            for (let i = 0; i < 4; i++) {
+                const opGain = opGains[i];
+                const env = envs[i];
+                const tl = Math.max(0.001, peaks[i] / 100);
+                
+                if (i === 3) {
+                    // Carrier or unused ops: normal amplitude
+                    onNotePress(opGain, env.params, tl);
+                } else {
+                    const fmDepth = tl * tl * 1200;
+                    onNotePress(opGain, env.params, fmDepth);
+                }
+           }
         });
+
         button.addEventListener('mouseup', () => {
-            onNoteRelease(op4Gain, env.params);
-        });
+            for (let i = 0; i < 4; i++) {
+                onNoteRelease(opGains[i], envs[i].params);
+            }
+        }); 
     })
 </script>
 
