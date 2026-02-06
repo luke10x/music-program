@@ -37,6 +37,13 @@
         .window-content {
             padding: 12px;
             background: #fafafa;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .window-content.row {
+            flex-direction: row;
+            gap: 8px;
         }
 
         /* Overlay covers the entire page */
@@ -53,6 +60,7 @@
             z-index: 1000;
             /* above everything else */
         }
+
         .window-content button {
             padding: 6px 12px;
             font-size: 14px;
@@ -70,32 +78,81 @@
         .note-key[data-octave='2'] {
             color: #bbb;
         }
+
         .note-key[data-octave='4'] {
             color: #bbb;
         }
+
+        /**
+         * Instruments
+         */
+        fieldset {
+            border: 2px solid #444;
+            /* dark border for depth */
+            border-radius: 6px;
+            /* smooth corners */
+            padding: 12px 16px 16px 16px;
+            /* room inside */
+            background: linear-gradient(145deg, #cccccc, #1f1f1f);
+            /* subtle metal-ish gradient */
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.05),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+                0 2px 6px rgba(0, 0, 0, 0.4);
+            /* inner + outer shadows for depth */
+            font-family: "Arial", sans-serif;
+            color: #eee;
+            /* position: relative; */
+            margin: 16px 0;
+        }
+
+        fieldset legend {
+            padding: 4px 8px;
+            font-weight: bold;
+            color: #f0f0f0;
+            background: #f69;
+            /* background "tab" style */
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Optional: fieldset content layout */
+        fieldset .window-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Optional: subtle hover for inputs inside */
+        fieldset input[type="range"] {
+            accent-color: #4fc3f7;
+        }
+
         .fm-sliders {
             display: flex;
             flex-direction: column;
             gap: 8px;
             padding-bottom: 8px;
         }
+
         .fm-sliders label,
-        .fm-sliders label span
-        {
+        .fm-sliders label span {
             font-size: 12px;
         }
+
         .fm-sliders label {
             display: flex;
             align-items: center;
         }
-        .fm-sliders label *{
+
+        .fm-sliders label * {
             flex: 1 1;
         }
-        .fm-sliders label span{
-            flex: 0 0 20px; /* do not grow, do not shrink, fixed 50px */
+
+        .fm-sliders label span {
+            flex: 0 0 20px;
+            /* do not grow, do not shrink, fixed 50px */
             text-align: center;
         }
-
     </style>
 </head>
 
@@ -123,102 +180,98 @@
 
     <div style="display: flex; gap: 8px;">
         <div class="window">
-            <div class="window-title">Cylinder #1</div>
-            <div class="window-content">
-                <div class="fm-sliders">
-                    <label>
-                        TL
-                        <input id="slider-0" type="range" min="0" max="100" value="50">
-                        <slider-value></slider-value>
-                    </label>
-                    <label>
-                        MT
-                        <input id="mt-0" type="range" min="0" max="15" value="1">
-                        <slider-value></slider-value>
-                    </label>
-                    <label>
-                        DT
-                        <input id="dt-0" type="range" min="-3" max="3" value="0">
-                        <slider-value></slider-value>
-                    </label>
-                </div>
-                <fm-envelope id="op0-env"></fm-envelope>
-            </div>
-        </div>
-        <div class="window">
             <div class="window-title">Cylinder #2</div>
-            <div class="window-content">
-                <div class="fm-sliders">
-                    <label>
-                        TL
-                        <input id="slider-1" type="range" min="0" max="100" value="50">
-                        <slider-value></slider-value>
-                    </label>
-                    <label>
-                        MT
-                        <input id="mt-1" type="range" min="0" max="15" value="1">
-                        <slider-value></slider-value>
-                    </label>
-                    <label>
-                        DT
-                        <input id="dt-1" type="range" min="-3" max="3" value="0">
-                        <slider-value></slider-value>
-                    </label>
-                </div>
-                <fm-envelope id="op1-env"></fm-envelope>
-            </div>
-        </div>
-        <div class="window">
-            <div class="window-title">Cylinder #3</div>
-            <div class="window-content">
-                <div class="fm-sliders">
-                    <label>
-                        TL
-                        <input id="slider-2" type="range" min="0" max="100" value="50">
-                        <slider-value></slider-value>
-                    </label>
-                    <label>
-                        MT
-                        <input id="mt-2" type="range" min="0" max="15" value="1">
-                        <slider-value></slider-value>
-                    </label>
-                    <label>
-                        DT
-                        <input id="dt-2" type="range" min="-3" max="3" value="0">
-                        <slider-value></slider-value>
-                    </label>
-                </div>
-                <fm-envelope id="op2-env"></fm-envelope>
-            </div>
-        </div>
-        <div class="window">
-            <div class="window-title">Cylinder #4</div>
-            <div class="window-content">
-                <div class="fm-sliders">
-                    <label>
-                        TL
-                        <input id="slider-3" type="range" min="0" max="100" value="50">
-                        <slider-value></slider-value>
-                    </label>
-                    <label>
-                        MT
-                        <input id="mt-3" type="range" min="0" max="15" value="1">
-                        <slider-value></slider-value>
-                    </label>
-                    <label>
-                        DT
-                        <input id="dt-3" type="range" min="-3" max="3" value="0">
-                        <slider-value></slider-value>
-                    </label>
-                </div>
-                <fm-envelope id="op3-env"></fm-envelope>
+            <div class="window-content row">
+                <fieldset class="module">
+                    <legend>Oscillator 1</legend>
+                    <div class="fm-sliders">
+                        <label>
+                            TL
+                            <input id="slider-0" type="range" min="0" max="100" value="50">
+                            <slider-value></slider-value>
+                        </label>
+                        <label>
+                            MT
+                            <input id="mt-0" type="range" min="0" max="15" value="1">
+                            <slider-value></slider-value>
+                        </label>
+                        <label>
+                            DT
+                            <input id="dt-0" type="range" min="-3" max="3" value="0">
+                            <slider-value></slider-value>
+                        </label>
+                    </div>
+                    <fm-envelope id="op0-env"></fm-envelope>
+                </fieldset>
+                <fieldset class="module">
+                    <legend>Oscillator 2</legend>
+                    <div class="fm-sliders">
+                        <label>
+                            TL
+                            <input id="slider-1" type="range" min="0" max="100" value="50">
+                            <slider-value></slider-value>
+                        </label>
+                        <label>
+                            MT
+                            <input id="mt-1" type="range" min="0" max="15" value="1">
+                            <slider-value></slider-value>
+                        </label>
+                        <label>
+                            DT
+                            <input id="dt-1" type="range" min="-3" max="3" value="0">
+                            <slider-value></slider-value>
+                        </label>
+                    </div>
+                    <fm-envelope id="op1-env"></fm-envelope>
+                </fieldset>
+                <fieldset class="module">
+                    <legend>Oscillator 3</legend>
+                    <div class="fm-sliders">
+                        <label>
+                            TL
+                            <input id="slider-2" type="range" min="0" max="100" value="50">
+                            <slider-value></slider-value>
+                        </label>
+                        <label>
+                            MT
+                            <input id="mt-2" type="range" min="0" max="15" value="1">
+                            <slider-value></slider-value>
+                        </label>
+                        <label>
+                            DT
+                            <input id="dt-2" type="range" min="-3" max="3" value="0">
+                            <slider-value></slider-value>
+                        </label>
+                        <fm-envelope id="op2-env"></fm-envelope>
+                </fieldset>
+                <fieldset class="module">
+                    <legend>Oscillator 4</legend>
+                    <div class="fm-sliders">
+                        <label>
+                            TL
+                            <input id="slider-3" type="range" min="0" max="100" value="50">
+                            <slider-value></slider-value>
+                        </label>
+                        <label>
+                            MT
+                            <input id="mt-3" type="range" min="0" max="15" value="1">
+                            <slider-value></slider-value>
+                        </label>
+                        <label>
+                            DT
+                            <input id="dt-3" type="range" min="-3" max="3" value="0">
+                            <slider-value></slider-value>
+                        </label>
+                        <fm-envelope id="op3-env"></fm-envelope>
+                    </div>
+                </fieldset>
             </div>
         </div>
     </div>
 
     <div class="window">
         <div class="window-title">Input</div>
-        <div class="window-content">
+        <div class="window-content row">
             <button class="note-key" data-note="E" data-octave="2">E2</button>
             <button class="note-key" data-note="F" data-octave="2">F2</button>
             <button class="note-key" data-note="G" data-octave="2">G2</button>
@@ -303,6 +356,9 @@
                             flex-direction: column;
                             gap: 8px;
                             width: 100%;
+                        }
+                        input[type="range"] {
+                            accent-color: #4fc3f7;
                         }
                         label {
                             display: flex;
@@ -414,8 +470,8 @@
     let ops;
     let opGains;
     const peaks = gainSliders.map(s => Number(s.value));
-    const mts   = mtSliders.map(s => Number(s.value));
-    const dts   = dtSliders.map(s => Number(s.value));
+    const mts = mtSliders.map(s => Number(s.value));
+    const dts = dtSliders.map(s => Number(s.value));
     let envs = [
         document.querySelector('fm-envelope#op0-env'),
         document.querySelector('fm-envelope#op1-env'),
@@ -557,7 +613,7 @@
             g.linearRampToValueAtTime(0.001, now + relTime);
             setTimeout(() => {
                 drawScope(); // One last time when graph is still
-            }, relTime * 1_000+ 100);
+            }, relTime * 1_000 + 100);
         }
     }
 
@@ -615,7 +671,7 @@
 
         // Calculate the frequency using the formula
         const frequency = 440 * Math.pow(2, semitoneDiff / 12);
-        console.log({note, octave, frequency});
+        console.log({ note, octave, frequency });
 
         return frequency;
     }
@@ -650,7 +706,7 @@
                 const opGain = opGains[i];
                 const env = envs[i];
                 const tl = Math.max(0.001, peaks[i] / 100);
-                
+
                 if (i === 3) {
                     // Carrier or unused ops: normal amplitude
                     onNotePress(opGain, env.params, tl);
@@ -658,14 +714,14 @@
                     const fmDepth = tl * tl * 1200;
                     onNotePress(opGain, env.params, fmDepth);
                 }
-           }
+            }
         });
 
         button.addEventListener('mouseup', () => {
             for (let i = 0; i < 4; i++) {
                 onNoteRelease(opGains[i], envs[i].params);
             }
-        }); 
+        });
     })
 </script>
 
