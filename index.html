@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Music Program</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        canvas.scope {
+            width: 100%;
+        }
+
+        .window {
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            font-family: sans-serif;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+        }
+
+        .window-title {
+            background: #3a3a3a;
+            color: #fff;
+            padding: 6px 12px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: default;
+            user-select: none;
+        }
+
+        .window-content {
+            padding: 12px;
+            background: #fafafa;
+        }
+
+        /* Overlay covers the entire page */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            /* semi-transparent dark overlay */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            /* above everything else */
+        }
+        .window-content button {
+            padding: 6px 12px;
+            font-size: 14px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            background-color: #3a3a3a;
+            color: white;
+        }
+
+        .window-content button:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="overlay">
+        <div class="window">
+            <div class="window-title">Welcome</div>
+            <div class="window-content">
+                <p>Click the button to continue.</p>
+                <button id="close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+    <div class="window">
+        <div class="window-title">Output</div>
+        <div class="window-content">
+            <p>
+                <canvas id="scope" width="200" height="100"></canvas>
+            </p>
+        </div>
+    </div>
+
+    <div class="window">
+        <div class="window-title">Instrument</div>
+        <div class="window-content">
+            <input id="slider" type="range" min="0" max="100" value="50">
+            <fm-envelope></fm-envelope>
+        </div>
+    </div>
+
+    <div class="window">
+        <div class="window-title">Input</div>
+        <div class="window-content">
+            <button id="note-c-natural-3" class="note-key" data-note="C" data-octave="3">C3</button>
+            <button id="note-d-natural-3" class="note-key" data-note="D" data-octave="3">D3</button>
+            <button id="note-e-natural-3" class="note-key" data-note="E" data-octave="3">E3</button>
+            <button id="note-f-natural-3" class="note-key" data-note="F" data-octave="3">F3</button>
+            <button id="note-g-natural-3" class="note-key" data-note="G" data-octave="3">G3</button>
+            <button id="note-a-natural-3" class="note-key" data-note="A" data-octave="3">A3</button>
+            <button id="note-b-natural-3" class="note-key" data-note="B" data-octave="3">B3</button>
+        </div>
+    </div>
+</body>
+</body>
+<script>
+    const overlay = document.getElementById('overlay');
+    const closeBtn = document.getElementById('close-btn');
+
+    closeBtn.addEventListener('click', () => {
+        initAudio();
+        overlay.style.display = 'none';
+    });
+
+    function rateToTime(rate, maxRate, minTime, maxTime, alainfinity) {
+        if (rate <= 0) return alainfinity; // special case (SR=0)
+        const norm = rate / maxRate;    // 0–1
+        return maxTime * Math.pow(minTime / maxTime, norm);
+    }
+
+    function ARtoTime(AR) {
+        return rateToTime(AR, 31, 0.002, 1.0, 1.0); // 2ms .. 1s Inf=1
+    }
+
+    function DRtoTime(DR) {
+        return rateToTime(DR, 31, 0.01, 2.0, 3.0);  // 10ms .. 2s Inf=1
+    }
+
+    function SRtoTime(SR) {
+        return rateToTime(SR, 31, 0.5, 30.0, 60.0);  // 0.5s .. 30s
+    }
+
+    function RRtoTime(RR) {
+        return rateToTime(RR, 31, 0.01, 3.0, 5.0);  // 10ms .. 3s
+    }
+
+    function SLtoLevel(SL) {
+        return SL / 15;
+    }
+
+    class FMEnvelope extends HTMLElement {
+        constructor() {
+            super();
+            this.attachShadow({ mode: 'open' });
+
+            this.params = {
+                AR: 16,
+                DR: 16,
+                SL: 8,
+                SR: 8,
+                RR: 8
+            };
+
+            this.shadowRoot.innerHTML = `
+                    <style>
+                        .panel {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 8px;
+                            width: 100%;
+                        }
+                        label {
+                            font-size: 12px;
+                        }
+                        svg {
+                            height: 100px;
+                            background: #111;
+                            border-radius: 6px;
+                        }
+                        text { fill: #aaa; font-size: 10px; }
+                        path { stroke: #4fc3f7; stroke-width: 2; fill: none; }
+                    </style>
+                    <div class="panel">
+                        <svg viewBox="0 0 100 120">
+                            <path id="env" />
+                        </svg>
+                        ${this.slider('AR', 31)}
+                        ${this.slider('DR', 31)}
+                        ${this.slider('SL', 15)}
+                        ${this.slider('SR', 31)}
+                        ${this.slider('RR', 31)}
+                    </div>
+                    `;
+        }
+
+        connectedCallback() {
+            this.shadowRoot.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', e => {
+                    this.params[e.target.name] = Number(e.target.value);
+                    this.drawEnvelope();
+                });
+            });
+            this.drawEnvelope();
+        }
+
+        slider(name, max) {
+            return `<label>
+                    ${name}
+                    <input type="range" name="${name}" min="0" max="${max}" value="${this.params[name]}" />
+                </label>`;
+        }
+
+        drawEnvelope() {
+            const { AR, DR, SL, SR, RR } = this.params;
+
+            const atk = 20 - AR * 0.5;
+            const dec1 = 20 - DR * 0.5;
+            const sustainY = 100 - (SL / 15) * 80;
+            const dec2 = 20 - SR * 0.5;
+            const rel = 20 - RR * 0.5;
+
+            const x0 = 10;
+            const y0 = 100;
+            const x1 = x0 + atk;
+            const y1 = 20;
+            const x2 = x1 + dec1;
+            const y2 = sustainY;
+            const x3 = x2 + dec2;
+            const y3 = sustainY;
+            const x4 = x3 + rel;
+            const y4 = 100;
+
+            const d = `M ${x0} ${y0} L ${x1} ${y1} L ${x2} ${y2} L ${x3} ${y3} L ${x4} ${y4}`;
+
+            this.shadowRoot.getElementById('env').setAttribute('d', d);
+        }
+    }
+
+    customElements.define('fm-envelope', FMEnvelope);
+    const fftSize = 256;
+    let ctx;
+
+    const buffer = new Uint8Array(fftSize);
+    const scopeCanvas = document.getElementById('scope');
+    const slider = document.getElementById('slider');
+    const env = document.querySelector('fm-envelope');
+
+    let op3;
+    let op4;
+    let op3Gain;
+    let op4Gain;
+    let analyser;
+
+    function initAudio() {
+        ctx = new AudioContext();
+        op3Gain = ctx.createGain();
+        op4Gain = ctx.createGain();
+
+        op4 = ctx.createOscillator();
+        op4.type = 'sine';
+        op4.frequency.value = 440;
+
+        op3 = ctx.createOscillator();
+        op3.type = 'sine';
+        op3.frequency.value = 880;
+
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+
+        op3.connect(op3Gain);
+        op3Gain.connect(op4.frequency);
+        op4.connect(op4Gain);
+
+        op4Gain.connect(analyser);
+        analyser.connect(ctx.destination);
+
+        op3.start();
+        op4.start();
+
+        op4Gain.gain.setValueAtTime(0, ctx.currentTime);
+
+        drawScope();
+    }
+
+    function onNotePress(opGain, env, peak = 1.0) {
+        const now = ctx.currentTime;
+
+        const atk = ARtoTime(env.AR);
+        const dec = DRtoTime(env.DR);
+        const susLvl = SLtoLevel(env.SL);
+        const susTime = SRtoTime(env.SR);
+
+        const g = opGain.gain;
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(0, now);
+
+        // Attack
+        g.exponentialRampToValueAtTime(peak, now + atk);
+
+        // Decay to sustain level
+        g.exponentialRampToValueAtTime(
+            peak * susLvl,
+            now + atk + dec
+        );
+
+        // Sustain decay (SR)
+        if (env.SR > 0) {
+            g.linearRampToValueAtTime(
+                0.0001,
+                now + atk + dec + susTime
+            );
+        }
+        // else SR=0 -> hold forever
+    }
+
+    function onNoteRelease(opGain, env) {
+        const now = ctx.currentTime;
+        const relTime = RRtoTime(env.RR);
+
+        const g = opGain.gain;
+
+        // Stop whatever the envelope was doing
+        g.cancelScheduledValues(now);
+
+        // Release to silence
+        g.linearRampToValueAtTime(0.0001, now + relTime);
+        setTimeout(() => {
+            drawScope(); // One last time when graph is still
+        }, relTime * 1_000+ 100);
+    }
+
+    let lastTrace = null;
+    function drawScope() {
+        requestAnimationFrame(drawScope);
+
+
+        analyser.getByteTimeDomainData(buffer);
+
+        // Midpoint of the 8-bit audio data range (0-255), used as a reference for zero-crossing detection
+        const mid = 128; 
+            
+        // Tolerance around the midpoint to account for noise and minor fluctuations
+        const hysteresis = 4;
+
+        // Minimum slope required to consider a point as the start of a new waveform cycle
+        const minSlope = 1;
+
+
+        // Number of samples to skip at the start to avoid edge artifacts
+        const preSamples = 8;
+        const samplesToDraw = buffer.length - preSamples - 2;
+
+        startIndex = 0;
+        // let startIndex = -1;
+        // for (let i = preSamples + 1; i < buffer.length - samplesToDraw; i++) {
+        //     const p0 = buffer[i - 1];
+        //     const p1 = buffer[i];
+        //     const p2 = buffer[i + 1];
+
+        //     const slope = p2 - p0;
+
+        //     if (
+        //         p1 > mid - hysteresis &&
+        //         p1 < mid + hysteresis &&
+        //         slope > minSlope
+        //     ) {
+        //         startIndex = i;
+        //         break;
+        //     }
+        // }
+
+        // if (startIndex === -1) return;// what happens here
+
+        const trace = new Uint8Array(samplesToDraw);
+
+        // Explain or simplify this double condition
+        for (let i = 0; i < samplesToDraw && (startIndex + i) < buffer.length; i++) {
+            trace[i] = buffer[startIndex + i];
+        }
+
+        lastTrace = trace;
+        renderTrace(trace);
+    }
+
+
+    function renderTrace(trace) {
+        const ctx2d = scopeCanvas.getContext('2d');
+
+        ctx2d.clearRect(0, 0, scopeCanvas.width, scopeCanvas.height);
+
+        ctx2d.beginPath();
+
+        for (let i = 0; i < trace.length; i++) {
+            const x = (i / (trace.length - 1)) * scopeCanvas.width;
+            const y = (trace[i] / 255) * scopeCanvas.height;
+
+            if (i === 0) ctx2d.moveTo(x, y);
+            else ctx2d.lineTo(x, y);
+        }
+
+        ctx2d.strokeStyle = '#4fc3f7';
+        ctx2d.lineWidth = 3;
+        ctx2d.stroke();
+    }
+
+    slider.addEventListener('input', () => {
+        const tl = slider.value / 100;   // 0–1 (TL knob)
+        const fmDepth = tl * tl * 1200;  // squared = FM loudness curve
+        op3Gain.gain.setValueAtTime(fmDepth, ctx.currentTime);
+        console.log('slider changed to ', slider.value)
+    });
+
+    function noteToFrequency(note, octave) {
+        // Define the notes and their corresponding semitone offsets from A4
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const noteIndex = notes.indexOf(note);
+
+        if (noteIndex === -1) {
+            throw new Error("Invalid note name. Use sharps (#) or flats (b), e.g., 'C#' or 'Eb'.");
+        }
+
+        // Calculate the semitone difference from A4 (A4 is the 9th note in the list, octave 4)
+        const semitoneDiff = noteIndex - 9 + (octave - 4) * 12;
+
+        // Calculate the frequency using the formula: f(n) = 440 * 2^(n/12)
+        const frequency = 440 * Math.pow(2, semitoneDiff / 12);
+        console.log({note, octave, frequency});
+
+        return frequency;
+    }
+
+    document.querySelectorAll('button.note-key').forEach(button => {
+        button.addEventListener('mousedown', () => {
+
+            const note = button.dataset.note;
+            const octave = button.dataset.octave;
+            const frequency = noteToFrequency(note, octave);
+            
+            op4.frequency.linearRampToValueAtTime(frequency, ctx.currentTime + 0.001);
+            op3.frequency.linearRampToValueAtTime(frequency * 2, ctx.currentTime + 0.001);
+
+            onNotePress(op4Gain, env.params, 1.0);
+        });
+        button.addEventListener('mouseup', () => {
+            onNoteRelease(op4Gain, env.params);
+        });
+    })
+</script>
+
+</html>
