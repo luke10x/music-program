@@ -93,11 +93,20 @@
         </div>
     </div>
 
-    <div class="window">
-        <div class="window-title">Instrument</div>
-        <div class="window-content">
-            <input id="slider" type="range" min="0" max="100" value="50">
-            <fm-envelope></fm-envelope>
+    <div style="display: flex; gap: 8px;">
+        <div class="window">
+            <div class="window-title">Instrument</div>
+            <div class="window-content">
+                <input id="slider" type="range" min="0" max="100" value="50">
+                <fm-envelope></fm-envelope>
+            </div>
+        </div>
+        <div class="window">
+            <div class="window-title">Instrument</div>
+            <div class="window-content">
+                <input id="slider" type="range" min="0" max="100" value="50">
+                <fm-envelope></fm-envelope>
+            </div>
         </div>
     </div>
 
@@ -333,79 +342,29 @@
         }
     }
 
-
-    let lastTrace = null;
     function drawScope() {
         requestAnimationFrame(drawScope);
 
-
         analyser.getByteTimeDomainData(buffer);
 
-        // Midpoint of the 8-bit audio data range (0-255), used as a reference for zero-crossing detection
-        const mid = 128; 
-            
-        // Tolerance around the midpoint to account for noise and minor fluctuations
-        const hysteresis = 4;
+        const ctx = scopeCanvas.getContext('2d');
+        const w = scopeCanvas.width;
+        const h = scopeCanvas.height;
 
-        // Minimum slope required to consider a point as the start of a new waveform cycle
-        const minSlope = 1;
+        ctx.clearRect(0, 0, w, h);
+        ctx.beginPath();
 
+        for (let i = 0; i < buffer.length; i++) {
+            const x = (i / (buffer.length - 1)) * w;
+            const y = (buffer[i] / 255) * h;
 
-        // Number of samples to skip at the start to avoid edge artifacts
-        const preSamples = 8;
-        const samplesToDraw = buffer.length - preSamples - 2;
-
-        startIndex = 0;
-        // let startIndex = -1;
-        // for (let i = preSamples + 1; i < buffer.length - samplesToDraw; i++) {
-        //     const p0 = buffer[i - 1];
-        //     const p1 = buffer[i];
-        //     const p2 = buffer[i + 1];
-
-        //     const slope = p2 - p0;
-
-        //     if (
-        //         p1 > mid - hysteresis &&
-        //         p1 < mid + hysteresis &&
-        //         slope > minSlope
-        //     ) {
-        //         startIndex = i;
-        //         break;
-        //     }
-        // }
-
-        // if (startIndex === -1) return;// what happens here
-
-        const trace = new Uint8Array(samplesToDraw);
-
-        // Explain or simplify this double condition
-        for (let i = 0; i < samplesToDraw && (startIndex + i) < buffer.length; i++) {
-            trace[i] = buffer[startIndex + i];
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
         }
 
-        lastTrace = trace;
-        renderTrace(trace);
-    }
-
-
-    function renderTrace(trace) {
-        const ctx2d = scopeCanvas.getContext('2d');
-
-        ctx2d.clearRect(0, 0, scopeCanvas.width, scopeCanvas.height);
-
-        ctx2d.beginPath();
-
-        for (let i = 0; i < trace.length; i++) {
-            const x = (i / (trace.length - 1)) * scopeCanvas.width;
-            const y = (trace[i] / 255) * scopeCanvas.height;
-
-            if (i === 0) ctx2d.moveTo(x, y);
-            else ctx2d.lineTo(x, y);
-        }
-
-        ctx2d.strokeStyle = '#4fc3f7';
-        ctx2d.lineWidth = 3;
-        ctx2d.stroke();
+        ctx.strokeStyle = '#4fc3f7';
+        ctx.lineWidth = 3;
+        ctx.stroke();
     }
 
     slider.addEventListener('input', () => {
