@@ -153,6 +153,30 @@
             /* do not grow, do not shrink, fixed 50px */
             text-align: center;
         }
+
+        .module .algorithms {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .module .algorithms label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .module .algorithms input[type="radio"] {
+            display: none;
+            /* hide the native radio */
+        }
+
+        .module .algorithms input[type="radio"]:checked+svg {
+            stroke: rgb(140, 238, 248);
+            stroke-width: 3;
+            fill-opacity: 0.8;
+        }
     </style>
 </head>
 
@@ -163,7 +187,10 @@
             <div class="window-content">
                 <h1>Under Construction</h1>
                 <p>
-                    You can create the sound using FM modulation.
+                    You can create a sound using FM modulation.
+                </p>
+                <p>
+                    Sorry only the first algo works the others are vibe coded.
                 </p>
                 <button id="close-btn">I Agree</button>
             </div>
@@ -180,7 +207,133 @@
 
     <div style="display: flex; gap: 8px;">
         <div class="window">
-            <div class="window-title">Cylinder #2</div>
+            <div class="window-title">Instrument Editor</div>
+            <div class="window-content">
+                <fieldset class="module">
+                    <legend>FM Algorithm</legend>
+                    <div class="algorithms">
+                        <!-- Algorithm 1: Chain -->
+                        <label>
+                            <input type="radio" name="algo" value="chain" checked>
+                            <svg width="60" height="40">
+                                <circle cx="10" cy="20" r="5" fill="#4fc3f7" />
+                                <circle cx="25" cy="20" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="20" r="5" fill="#4fc3f7" />
+                                <circle cx="55" cy="20" r="5" fill="#4fc3f7" />
+                                <line x1="10" y1="20" x2="25" y2="20" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="20" x2="40" y2="20" stroke="#aaa" stroke-width="2" />
+                                <line x1="40" y1="20" x2="55" y2="20" stroke="#aaa" stroke-width="2" />
+                            </svg>
+                        </label>
+
+                        <!-- Algorithm 2: Parallel -->
+                        <label>
+                            <input type="radio" name="algo" value="parallel">
+                            <svg width="60" height="40">
+                                <circle cx="10" cy="10" r="5" fill="#4fc3f7" />
+                                <circle cx="10" cy="30" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="10" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="30" r="5" fill="#4fc3f7" />
+                                <line x1="10" y1="10" x2="40" y2="10" stroke="#aaa" stroke-width="2" />
+                                <line x1="10" y1="30" x2="40" y2="30" stroke="#aaa" stroke-width="2" />
+                            </svg>
+                        </label>
+
+                        <!-- Algorithm 3 -->
+                        <label>
+                            <input type="radio" name="algo" value="algo3">
+                            <svg width="60" height="40">
+                                <circle cx="10" cy="20" r="5" fill="#4fc3f7" />
+                                <circle cx="25" cy="10" r="5" fill="#4fc3f7" />
+                                <circle cx="25" cy="30" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="20" r="5" fill="#4fc3f7" />
+                                <line x1="10" y1="20" x2="25" y2="10" stroke="#aaa" stroke-width="2" />
+                                <line x1="10" y1="20" x2="25" y2="30" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="10" x2="40" y2="20" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="30" x2="40" y2="20" stroke="#aaa" stroke-width="2" />
+                            </svg>
+                        </label>
+
+                        <!-- Algorithm 4 -->
+                        <label>
+                            <input type="radio" name="algo" value="algo4">
+                            <svg width="60" height="40">
+                                <circle cx="10" cy="20" r="5" fill="#4fc3f7" />
+                                <circle cx="25" cy="20" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="10" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="30" r="5" fill="#4fc3f7" />
+                                <line x1="10" y1="20" x2="25" y2="20" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="20" x2="40" y2="10" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="20" x2="40" y2="30" stroke="#aaa" stroke-width="2" />
+                            </svg>
+                        </label>
+
+                        <!-- Algorithm 5 -->
+                        <label>
+                            <input type="radio" name="algo" value="algo5">
+                            <svg width="60" height="40">
+                                <circle cx="10" cy="20" r="5" fill="#4fc3f7" />
+                                <circle cx="25" cy="10" r="5" fill="#4fc3f7" />
+                                <circle cx="25" cy="30" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="10" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="30" r="5" fill="#4fc3f7" />
+                                <line x1="10" y1="20" x2="25" y2="10" stroke="#aaa" stroke-width="2" />
+                                <line x1="10" y1="20" x2="25" y2="30" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="10" x2="40" y2="10" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="30" x2="40" y2="30" stroke="#aaa" stroke-width="2" />
+                            </svg>
+                        </label>
+
+                        <!-- Algorithm 6 -->
+                        <label>
+                            <input type="radio" name="algo" value="algo6">
+                            <svg width="60" height="40">
+                                <circle cx="10" cy="10" r="5" fill="#4fc3f7" />
+                                <circle cx="10" cy="30" r="5" fill="#4fc3f7" />
+                                <circle cx="25" cy="20" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="20" r="5" fill="#4fc3f7" />
+                                <line x1="10" y1="10" x2="25" y2="20" stroke="#aaa" stroke-width="2" />
+                                <line x1="10" y1="30" x2="25" y2="20" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="20" x2="40" y2="20" stroke="#aaa" stroke-width="2" />
+                            </svg>
+                        </label>
+
+                        <!-- Algorithm 7 -->
+                        <label>
+                            <input type="radio" name="algo" value="algo7">
+                            <svg width="60" height="40">
+                                <circle cx="10" cy="20" r="5" fill="#4fc3f7" />
+                                <circle cx="25" cy="20" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="10" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="30" r="5" fill="#4fc3f7" />
+                                <circle cx="55" cy="20" r="5" fill="#4fc3f7" />
+                                <line x1="10" y1="20" x2="25" y2="20" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="20" x2="40" y2="10" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="20" x2="40" y2="30" stroke="#aaa" stroke-width="2" />
+                                <line x1="40" y1="10" x2="55" y2="20" stroke="#aaa" stroke-width="2" />
+                                <line x1="40" y1="30" x2="55" y2="20" stroke="#aaa" stroke-width="2" />
+                            </svg>
+                        </label>
+
+                        <!-- Algorithm 8 -->
+                        <label>
+                            <input type="radio" name="algo" value="algo8">
+                            <svg width="60" height="40">
+                                <circle cx="10" cy="10" r="5" fill="#4fc3f7" />
+                                <circle cx="10" cy="30" r="5" fill="#4fc3f7" />
+                                <circle cx="25" cy="10" r="5" fill="#4fc3f7" />
+                                <circle cx="25" cy="30" r="5" fill="#4fc3f7" />
+                                <circle cx="40" cy="20" r="5" fill="#4fc3f7" />
+                                <line x1="10" y1="10" x2="25" y2="10" stroke="#aaa" stroke-width="2" />
+                                <line x1="10" y1="30" x2="25" y2="30" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="10" x2="40" y2="20" stroke="#aaa" stroke-width="2" />
+                                <line x1="25" y1="30" x2="40" y2="20" stroke="#aaa" stroke-width="2" />
+                            </svg>
+                        </label>
+                    </div>
+                </fieldset>
+            </div>
+
             <div class="window-content row">
                 <fieldset class="module">
                     <legend>Oscillator 1</legend>
@@ -479,23 +632,72 @@
         document.querySelector('fm-envelope#op3-env'),
     ];
 
-    const FM_ALGORITHMS = {
-        chain: [
-            [0, 1],
-            [1, 2],
-            [2, 3],
-            [3, "out"],
-        ],
+const FM_ALGORITHMS = {
+    // 1. Chain: 0→1→2→3→out
+    chain: [
+        [0, 1],
+        [1, 2],
+        [2, 3],
+        [3, "out"],
+    ],
 
-        // example future algorithm
-        // two carriers, shared modulator
-        parallel: [
-            [0, 2],
-            [1, 2],
-            [2, "out"],
-            [3, "out"],
-        ],
-    };
+    // 2. Parallel: 0→2, 1→2, 2→out, 3→out
+    parallel: [
+        [0, 2],
+        [1, 2],
+        [2, "out"],
+        [3, "out"],
+    ],
+
+    // 3. 0→1→out, 2→3→out
+    dualChains: [
+        [0, 1],
+        [1, "out"],
+        [2, 3],
+        [3, "out"],
+    ],
+
+    // 4. 0→out, 1→2→3→out
+    singleSplit: [
+        [0, "out"],
+        [1, 2],
+        [2, 3],
+        [3, "out"],
+    ],
+
+    // 5. 0→3→out, 1→2→out
+    cross: [
+        [0, 3],
+        [3, "out"],
+        [1, 2],
+        [2, "out"],
+    ],
+
+    // 6. All chain to out separately: 0→out, 1→out, 2→out, 3→out
+    allSeparate: [
+        [0, "out"],
+        [1, "out"],
+        [2, "out"],
+        [3, "out"],
+    ],
+
+    // 7. Modulate in pairs: 0→1→out, 2→3→out, plus extra cross: 0→2
+    pairCross: [
+        [0, 1],
+        [1, "out"],
+        [2, 3],
+        [3, "out"],
+        [0, 2],
+    ],
+
+    // 8. Complex: 0→1→2→out, 3→out
+    complex: [
+        [0, 1],
+        [1, 2],
+        [2, "out"],
+        [3, "out"],
+    ],
+};
 
     function initAudio(algorithmName = "chain") {
         ctx = new AudioContext();
