@@ -191,7 +191,7 @@
                     You can create a sound using FM modulation.
                 </p>
                 <p>
-                    Sorry only the first algo works the others are vibe coded.
+                    All algos work now!
                 </p>
                 <button id="close-btn">I Agree</button>
             </div>
@@ -213,177 +213,178 @@
                 <fieldset class="module">
                     <legend>FM Algorithm</legend>
                     <div class="algorithms">
+                        <div class="algorithms">
 
-                        <!-- Algorithm 0: Serial Chain (1 → 2 → 3 → 4 → Output) -->
-                        <label>
-                            <input type="radio" name="algo" value="algo0" checked>
-                            <svg width="110" height="100">
-                                <line x1="15" y1="50" x2="40" y2="50" stroke="#aaa" stroke-width="2" />
-                                <line x1="40" y1="50" x2="65" y2="50" stroke="#aaa" stroke-width="2" />
-                                <line x1="65" y1="50" x2="90" y2="50" stroke="#aaa" stroke-width="2" />
+                            <!-- Algorithm 0: Serial Chain (1 → 2 → 3 → 4 → Output) -->
+                            <label>
+                                <input type="radio" name="algo" value="algo0" checked>
+                                <svg width="110" height="100">
+                                    <line x1="15" y1="50" x2="40" y2="50" stroke="#aaa" stroke-width="2" />
+                                    <line x1="40" y1="50" x2="65" y2="50" stroke="#aaa" stroke-width="2" />
+                                    <line x1="65" y1="50" x2="90" y2="50" stroke="#aaa" stroke-width="2" />
 
-                                <circle cx="15" cy="50" r="9" fill="#4fc3f7" />
-                                <text x="15" y="54" font-size="10" text-anchor="middle" fill="#000">1</text>
+                                    <circle cx="15" cy="50" r="9" fill="#4fc3f7" />
+                                    <text x="15" y="54" font-size="11" text-anchor="middle">1</text>
 
-                                <circle cx="40" cy="50" r="9" fill="#4fc3f7" />
-                                <text x="40" y="54" font-size="10" text-anchor="middle">2</text>
+                                    <circle cx="40" cy="50" r="9" fill="#4fc3f7" />
+                                    <text x="40" y="54" font-size="11" text-anchor="middle">2</text>
 
-                                <circle cx="65" cy="50" r="9" fill="#4fc3f7" />
-                                <text x="65" y="54" font-size="10" text-anchor="middle">3</text>
+                                    <circle cx="65" cy="50" r="9" fill="#4fc3f7" />
+                                    <text x="65" y="54" font-size="11" text-anchor="middle">3</text>
 
-                                <circle cx="90" cy="50" r="9" fill="#4fc3f7" />
-                                <text x="90" y="54" font-size="10" text-anchor="middle">4</text>
-                            </svg>
-                        </label>
+                                    <circle cx="90" cy="50" r="9" fill="#4fc3f7" />
+                                    <text x="90" y="54" font-size="11" text-anchor="middle">4</text>
+                                </svg>
+                            </label>
 
-                        <!-- Algorithm 1: Dual Modulators into Carrier Stack -->
-                        <label>
-                            <input type="radio" name="algo" value="algo1">
-                            <svg width="90" height="100">
-                                <line x1="15" y1="20" x2="45" y2="50" stroke="#aaa" stroke-width="2" />
-                                <line x1="15" y1="80" x2="45" y2="50" stroke="#aaa" stroke-width="2" />
-                                <line x1="45" y1="50" x2="75" y2="50" stroke="#aaa" stroke-width="2" />
+                            <!-- Algorithm 1: Dual Modulators into Carrier Stack -->
+                            <label>
+                                <input type="radio" name="algo" value="algo1">
+                                <svg width="90" height="100">
+                                    <line x1="15" y1="30" x2="45" y2="60" stroke="#aaa" stroke-width="2" />
+                                    <line x1="15" y1="90" x2="45" y2="60" stroke="#aaa" stroke-width="2" />
+                                    <line x1="45" y1="60" x2="75" y2="60" stroke="#aaa" stroke-width="2" />
 
-                                <circle cx="15" cy="20" r="9" fill="#4fc3f7" />
-                                <text x="15" y="24" font-size="10" text-anchor="middle">1</text>
+                                    <circle cx="15" cy="30" r="9" fill="#4fc3f7" />
+                                    <text x="15" y="34" font-size="11" text-anchor="middle">1</text>
 
-                                <circle cx="15" cy="80" r="9" fill="#4fc3f7" />
-                                <text x="15" y="84" font-size="10" text-anchor="middle">3</text>
+                                    <circle cx="15" cy="90" r="9" fill="#4fc3f7" />
+                                    <text x="15" y="94" font-size="11" text-anchor="middle">3</text>
 
-                                <circle cx="45" cy="50" r="9" fill="#4fc3f7" />
-                                <text x="45" y="54" font-size="10" text-anchor="middle">2</text>
+                                    <circle cx="45" cy="60" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="64" font-size="11" text-anchor="middle">2</text>
 
-                                <circle cx="75" cy="50" r="9" fill="#4fc3f7" />
-                                <text x="75" y="54" font-size="10" text-anchor="middle">4</text>
-                            </svg>
-                        </label>
+                                    <circle cx="75" cy="60" r="9" fill="#4fc3f7" />
+                                    <text x="75" y="64" font-size="11" text-anchor="middle">4</text>
+                                </svg>
+                            </label>
 
-                        <!-- Algorithm 2: Parallel Modulation into Final Carrier -->
-                        <label>
-                            <input type="radio" name="algo" value="algo2">
-                            <svg width="90" height="100">
-                                <line x1="15" y1="20" x2="75" y2="50" stroke="#aaa" stroke-width="2" />
-                                <line x1="15" y1="80" x2="45" y2="80" stroke="#aaa" stroke-width="2" />
-                                <line x1="45" y1="80" x2="75" y2="50" stroke="#aaa" stroke-width="2" />
+                            <!-- Algorithm 2: Parallel Modulation into Final Carrier -->
+                            <label>
+                                <input type="radio" name="algo" value="algo2">
+                                <svg width="90" height="100">
+                                    <line x1="15" y1="30" x2="75" y2="60" stroke="#aaa" stroke-width="2" />
+                                    <line x1="15" y1="90" x2="45" y2="90" stroke="#aaa" stroke-width="2" />
+                                    <line x1="45" y1="90" x2="75" y2="60" stroke="#aaa" stroke-width="2" />
 
-                                <circle cx="15" cy="20" r="9" fill="#4fc3f7" />
-                                <text x="15" y="24" font-size="10" text-anchor="middle">1</text>
+                                    <circle cx="15" cy="30" r="9" fill="#4fc3f7" />
+                                    <text x="15" y="34" font-size="11" text-anchor="middle">1</text>
 
-                                <circle cx="15" cy="80" r="9" fill="#4fc3f7" />
-                                <text x="15" y="84" font-size="10" text-anchor="middle">2</text>
+                                    <circle cx="15" cy="90" r="9" fill="#4fc3f7" />
+                                    <text x="15" y="94" font-size="11" text-anchor="middle">2</text>
 
-                                <circle cx="45" cy="80" r="9" fill="#4fc3f7" />
-                                <text x="45" y="84" font-size="10" text-anchor="middle">3</text>
+                                    <circle cx="45" cy="90" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="94" font-size="11" text-anchor="middle">3</text>
 
-                                <circle cx="75" cy="50" r="9" fill="#4fc3f7" />
-                                <text x="75" y="54" font-size="10" text-anchor="middle">4</text>
-                            </svg>
-                        </label>
+                                    <circle cx="75" cy="60" r="9" fill="#4fc3f7" />
+                                    <text x="75" y="64" font-size="11" text-anchor="middle">4</text>
+                                </svg>
+                            </label>
 
-                        <!-- Algorithm 3: Serial Pair plus Parallel Modulator -->
-                        <label>
-                            <input type="radio" name="algo" value="algo3">
-                            <svg width="90" height="100">
-                                <line x1="15" y1="20" x2="45" y2="20" stroke="#aaa" stroke-width="2" />
-                                <line x1="45" y1="20" x2="75" y2="50" stroke="#aaa" stroke-width="2" />
-                                <line x1="15" y1="80" x2="75" y2="50" stroke="#aaa" stroke-width="2" />
+                            <!-- Algorithm 3: Serial Pair plus Parallel Modulator -->
+                            <label>
+                                <input type="radio" name="algo" value="algo3">
+                                <svg width="90" height="100">
+                                    <line x1="15" y1="30" x2="45" y2="30" stroke="#aaa" stroke-width="2" />
+                                    <line x1="45" y1="30" x2="75" y2="60" stroke="#aaa" stroke-width="2" />
+                                    <line x1="15" y1="90" x2="75" y2="60" stroke="#aaa" stroke-width="2" />
 
-                                <circle cx="15" cy="20" r="9" fill="#4fc3f7" />
-                                <text x="15" y="24" font-size="10" text-anchor="middle">1</text>
+                                    <circle cx="15" cy="30" r="9" fill="#4fc3f7" />
+                                    <text x="15" y="34" font-size="11" text-anchor="middle">1</text>
 
-                                <circle cx="45" cy="20" r="9" fill="#4fc3f7" />
-                                <text x="45" y="24" font-size="10" text-anchor="middle">2</text>
+                                    <circle cx="45" cy="30" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="34" font-size="11" text-anchor="middle">2</text>
 
-                                <circle cx="15" cy="80" r="9" fill="#4fc3f7" />
-                                <text x="15" y="84" font-size="10" text-anchor="middle">3</text>
+                                    <circle cx="15" cy="90" r="9" fill="#4fc3f7" />
+                                    <text x="15" y="94" font-size="11" text-anchor="middle">3</text>
 
-                                <circle cx="75" cy="50" r="9" fill="#4fc3f7" />
-                                <text x="75" y="54" font-size="10" text-anchor="middle">4</text>
-                            </svg>
-                        </label>
+                                    <circle cx="75" cy="60" r="9" fill="#4fc3f7" />
+                                    <text x="75" y="64" font-size="11" text-anchor="middle">4</text>
+                                </svg>
+                            </label>
 
-                        <!-- Algorithm 4: Dual Independent Stacks (Two 2-Op Chains) -->
-                        <label>
-                            <input type="radio" name="algo" value="algo4">
-                            <svg width="90" height="100">
-                                <line x1="15" y1="20" x2="45" y2="20" stroke="#aaa" stroke-width="2" />
-                                <line x1="15" y1="80" x2="45" y2="80" stroke="#aaa" stroke-width="2" />
+                            <!-- Algorithm 4: Dual Independent Stacks (Two 2-Op Chains) -->
+                            <label>
+                                <input type="radio" name="algo" value="algo4">
+                                <svg width="90" height="100">
+                                    <line x1="15" y1="30" x2="45" y2="30" stroke="#aaa" stroke-width="2" />
+                                    <line x1="15" y1="90" x2="45" y2="90" stroke="#aaa" stroke-width="2" />
 
-                                <circle cx="15" cy="20" r="9" fill="#4fc3f7" />
-                                <text x="15" y="24" font-size="10" text-anchor="middle">1</text>
+                                    <circle cx="15" cy="30" r="9" fill="#4fc3f7" />
+                                    <text x="15" y="34" font-size="11" text-anchor="middle">1</text>
 
-                                <circle cx="45" cy="20" r="9" fill="#4fc3f7" />
-                                <text x="45" y="24" font-size="10" text-anchor="middle">2</text>
+                                    <circle cx="45" cy="30" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="34" font-size="11" text-anchor="middle">2</text>
 
-                                <circle cx="15" cy="80" r="9" fill="#4fc3f7" />
-                                <text x="15" y="84" font-size="10" text-anchor="middle">3</text>
+                                    <circle cx="15" cy="90" r="9" fill="#4fc3f7" />
+                                    <text x="15" y="94" font-size="11" text-anchor="middle">3</text>
 
-                                <circle cx="45" cy="80" r="9" fill="#4fc3f7" />
-                                <text x="45" y="84" font-size="10" text-anchor="middle">4</text>
-                            </svg>
-                        </label>
+                                    <circle cx="45" cy="90" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="94" font-size="11" text-anchor="middle">4</text>
+                                </svg>
+                            </label>
 
-                        <!-- Algorithm 5: Single Modulator Feeding Three Carriers -->
-                        <label>
-                            <input type="radio" name="algo" value="algo5">
-                            <svg width="90" height="110">
-                                <line x1="20" y1="55" x2="60" y2="15" stroke="#aaa" stroke-width="2" />
-                                <line x1="20" y1="55" x2="60" y2="55" stroke="#aaa" stroke-width="2" />
-                                <line x1="20" y1="55" x2="60" y2="95" stroke="#aaa" stroke-width="2" />
+                            <!-- Algorithm 5: Single Modulator Feeding Three Carriers -->
+                            <label>
+                                <input type="radio" name="algo" value="algo5">
+                                <svg width="90" height="110">
+                                    <line x1="20" y1="60" x2="60" y2="20" stroke="#aaa" stroke-width="2" />
+                                    <line x1="20" y1="60" x2="60" y2="60" stroke="#aaa" stroke-width="2" />
+                                    <line x1="20" y1="60" x2="60" y2="100" stroke="#aaa" stroke-width="2" />
 
-                                <circle cx="20" cy="55" r="9" fill="#4fc3f7" />
-                                <text x="20" y="59" font-size="10" text-anchor="middle">1</text>
+                                    <circle cx="20" cy="60" r="9" fill="#4fc3f7" />
+                                    <text x="20" y="64" font-size="11" text-anchor="middle">1</text>
 
-                                <circle cx="60" cy="15" r="9" fill="#4fc3f7" />
-                                <text x="60" y="19" font-size="10" text-anchor="middle">2</text>
+                                    <circle cx="60" cy="20" r="9" fill="#4fc3f7" />
+                                    <text x="60" y="24" font-size="11" text-anchor="middle">2</text>
 
-                                <circle cx="60" cy="55" r="9" fill="#4fc3f7" />
-                                <text x="60" y="59" font-size="10" text-anchor="middle">3</text>
+                                    <circle cx="60" cy="60" r="9" fill="#4fc3f7" />
+                                    <text x="60" y="64" font-size="11" text-anchor="middle">3</text>
 
-                                <circle cx="60" cy="95" r="9" fill="#4fc3f7" />
-                                <text x="60" y="99" font-size="10" text-anchor="middle">4</text>
-                            </svg>
-                        </label>
+                                    <circle cx="60" cy="100" r="9" fill="#4fc3f7" />
+                                    <text x="60" y="104" font-size="11" text-anchor="middle">4</text>
+                                </svg>
+                            </label>
 
-                        <!-- Algorithm 6: One Stack plus Two Independent Carriers -->
-                        <label>
-                            <input type="radio" name="algo" value="algo6">
-                            <svg width="90" height="110">
-                                <line x1="15" y1="15" x2="45" y2="15" stroke="#aaa" stroke-width="2" />
+                            <!-- Algorithm 6: One Stack plus Two Independent Carriers -->
+                            <label>
+                                <input type="radio" name="algo" value="algo6">
+                                <svg width="90" height="110">
+                                    <line x1="15" y1="20" x2="45" y2="20" stroke="#aaa" stroke-width="2" />
 
-                                <circle cx="15" cy="15" r="9" fill="#4fc3f7" />
-                                <text x="15" y="19" font-size="10" text-anchor="middle">1</text>
+                                    <circle cx="15" cy="20" r="9" fill="#4fc3f7" />
+                                    <text x="15" y="24" font-size="11" text-anchor="middle">1</text>
 
-                                <circle cx="45" cy="15" r="9" fill="#4fc3f7" />
-                                <text x="45" y="19" font-size="10" text-anchor="middle">2</text>
+                                    <circle cx="45" cy="20" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="24" font-size="11" text-anchor="middle">2</text>
 
-                                <circle cx="45" cy="55" r="9" fill="#4fc3f7" />
-                                <text x="45" y="59" font-size="10" text-anchor="middle">3</text>
+                                    <circle cx="45" cy="60" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="64" font-size="11" text-anchor="middle">3</text>
 
-                                <circle cx="45" cy="95" r="9" fill="#4fc3f7" />
-                                <text x="45" y="99" font-size="10" text-anchor="middle">4</text>
-                            </svg>
-                        </label>
+                                    <circle cx="45" cy="100" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="104" font-size="11" text-anchor="middle">4</text>
+                                </svg>
+                            </label>
 
-                        <!-- Algorithm 7: Fully Parallel (Four Carriers to Output) -->
-                        <label>
-                            <input type="radio" name="algo" value="algo7">
-                            <svg width="90" height="120">
-                                <circle cx="45" cy="15" r="9" fill="#4fc3f7" />
-                                <text x="45" y="19" font-size="10" text-anchor="middle">1</text>
+                            <!-- Algorithm 7: Fully Parallel (Four Carriers to Output) -->
+                            <label>
+                                <input type="radio" name="algo" value="algo7">
+                                <svg width="90" height="120">
+                                    <circle cx="45" cy="15" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="19" font-size="11" text-anchor="middle">1</text>
 
-                                <circle cx="45" cy="45" r="9" fill="#4fc3f7" />
-                                <text x="45" y="49" font-size="10" text-anchor="middle">2</text>
+                                    <circle cx="45" cy="45" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="49" font-size="11" text-anchor="middle">2</text>
 
-                                <circle cx="45" cy="75" r="9" fill="#4fc3f7" />
-                                <text x="45" y="79" font-size="10" text-anchor="middle">3</text>
+                                    <circle cx="45" cy="75" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="79" font-size="11" text-anchor="middle">3</text>
 
-                                <circle cx="45" cy="105" r="9" fill="#4fc3f7" />
-                                <text x="45" y="109" font-size="10" text-anchor="middle">4</text>
-                            </svg>
-                        </label>
+                                    <circle cx="45" cy="105" r="9" fill="#4fc3f7" />
+                                    <text x="45" y="109" font-size="11" text-anchor="middle">4</text>
+                                </svg>
+                            </label>
 
-                    </div>
+                        </div>
                 </fieldset>
             </div>
 
