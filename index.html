@@ -661,7 +661,16 @@
 
             const notes = ["C", "C#", "D", "D#", "E", "F",
                 "F#", "G", "G#", "A", "A#", "B"];
-            const octaves = [3, 4, 5];
+            const octaves = [4, 5];
+
+            this.markers = [];   // ← all finalised markers
+
+            this._drag = {
+                active: false,
+                column: null,
+                startStep: null,
+                currentStep: null
+            };
 
             const style = document.createElement("style");
             style.textContent = `
@@ -679,6 +688,9 @@
                 table {
                     /* border-collapse: collapse; */
                     width: max-content;
+                    user-select: none;
+                    -webkit-user-select: none; /* Chrome / Safari */
+                    -ms-user-select: none;     /* old Edge */
                 }
 
                 th, td {
@@ -723,7 +735,16 @@
                 tr:nth-child(even) td {
                     background: #181818;
                 }
-    `;
+
+                td.marker-preview,
+                tr:nth-child(even) td.marker-preview {
+                    background: rgba(79, 195, 247, 0.35);
+                }
+                td.marker-final,
+                tr:nth-child(even) td.marker-final {
+                    background: rgba(79, 195, 247, 0.8);
+                }
+            `;
 
             const table = document.createElement("table");
 
@@ -757,11 +778,16 @@
                 const stepCell = document.createElement("td");
                 stepCell.textContent = i.toString().padStart(3, "0");
                 stepCell.classList.add("step-col");
+
+
+
                 row.appendChild(stepCell);
 
                 for (let o = 0; o < octaves.length; o++) {
                     for (let n = 0; n < notes.length; n++) {
                         const cell = document.createElement("td");
+                cell.dataset.step = i;
+                cell.dataset.col = n;
                         row.appendChild(cell);
                     }
                 }
@@ -784,15 +810,155 @@
                     footerRow.appendChild(th);
                 }
             }
-
+    
             const tfoot = document.createElement("tfoot");
             tfoot.appendChild(footerRow);
             table.appendChild(tfoot);
 
+            this.table = table;
+
             shadow.appendChild(style);
             shadow.appendChild(table);
+            this.onCellMouseDown = this.onCellMouseDown.bind(this);
+            this.onMouseMove     = this.onMouseMove.bind(this);
+            this.onMouseUp       = this.onMouseUp.bind(this);
+        }
+
+        connectedCallback() {
+            // this.render();          // build the table, but i dont have this method actually 
+            this.attachListeners(); // start listening
+
+            // document.addEventListener("mouseup", () => this.onMouseUp());
+        }
+
+        attachListeners() {
+
+            // Start drag
+            this.addEventListener("mousedown", this.onCellMouseDown);
+
+            // Track drag
+            document.addEventListener("mousemove", this.onMouseMove);
+
+            // End drag
+            document.addEventListener("mouseup", this.onMouseUp);
+        }
+
+        disconnectedCallback() {
+            this.detachListeners(); // clean up properly
+        }
+        attachListeners() {
+
+            // Start drag
+            this.addEventListener("mousedown", this.onCellMouseDown);
+
+            // Track drag
+            document.addEventListener("mousemove", this.onMouseMove);
+
+            // End drag
+            document.addEventListener("mouseup", this.onMouseUp);
+        }
+        detachListeners() {
+            this.removeEventListener("mousedown", this.onCellMouseDown);
+            document.removeEventListener("mousemove", this.onMouseMove);
+            document.removeEventListener("mouseup", this.onMouseUp);
+        }
+        updatePreview() {
+
+            this.clearPreview();
+
+            if (!this._drag.active) return;
+
+            const start = Math.min(this._drag.startStep, this._drag.currentStep);
+            const end   = Math.max(this._drag.startStep, this._drag.currentStep);
+
+            for (let step = start; step <= end; step++) {
+                const cell = this.getCell(step, this._drag.column);
+                if (cell) cell.classList.add("marker-preview");
+            }
+        }
+
+        renderMarkers() {
+            this.clearFinalMarkers();
+
+            for (const m of this.markers) {
+                for (let step = m.start; step <= m.end; step++) {
+                    const cell = this.getCell(step, m.column);
+                    if (cell) cell.classList.add("marker-final");
+                }
+            }
+        }
+
+        getCell(step, col) {
+            return this.shadowRoot.querySelector(
+                `td[data-step="${step}"][data-col="${col}"]`
+            );
+        }
+clearPreview() {
+    this.shadowRoot
+        .querySelectorAll(".marker-preview")
+        .forEach(c => c.classList.remove("marker-preview"));
+}
+
+clearFinalMarkers() {
+    this.shadowRoot
+        .querySelectorAll(".marker-final")
+        .forEach(c => c.classList.remove("marker-final"));
+}
+        onCellMouseDown(e) {
+            console.log('no mosue down')
+            const cell = e.composedPath().find(el =>
+                el.tagName === "TD"
+            );
+            if (!cell) return;
+
+            const step = Number(cell.dataset.step);
+            const column = Number(cell.dataset.col);
+
+            this._drag.active = true;
+            this._drag.column = column;
+            this._drag.startStep = step;
+            this._drag.currentStep = step;
+
+            this.updatePreview();
+        } 
+
+        onMouseMove(e) {
+            if (!this._drag.active) return;
+
+            const cell = e.composedPath().find(el =>
+                el.tagName === "TD"
+            );
+            if (!cell) {
+                console.log('not stopping drag i guess')
+                return;
+            }
+
+            if (!cell.dataset.step) return;
+
+            const step = Number(cell.dataset.step);
+            this._drag.currentStep = step;
+
+            this.updatePreview();
+        }
+
+        onMouseUp() {
+            if (!this._drag.active) return;
+
+            const start = Math.min(this._drag.startStep, this._drag.currentStep);
+            const end   = Math.max(this._drag.startStep, this._drag.currentStep);
+
+            this.markers.push({
+                column: this._drag.column,
+                start,
+                end
+            });
+
+            this._drag.active = false;
+
+            this.renderMarkers();
         }
     }
+
 
     customElements.define("step-note-table", StepNoteTable);
 
