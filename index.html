@@ -4,6 +4,11 @@
 <head>
     <title>Music Program</title>
     <style>
+        body,
+        html {
+            overscroll-behavior: none;
+        }
+
         body {
             display: flex;
             flex-direction: column;
@@ -476,6 +481,8 @@
         </div>
     </div>
 
+    <step-note-table></step-note-table>
+
     <div class="window">
         <div class="window-title">Input</div>
         <div class="window-content row">
@@ -645,6 +652,149 @@
             this.shadowRoot.getElementById('env').setAttribute('d', d);
         }
     }
+
+    class StepNoteTable extends HTMLElement {
+        patternLength = 16;
+        constructor() {
+            super();
+            const shadow = this.attachShadow({ mode: "open" });
+
+            const notes = ["C", "C#", "D", "D#", "E", "F",
+                "F#", "G", "G#", "A", "A#", "B"];
+            const octaves = [3, 4, 5];
+
+            const style = document.createElement("style");
+            style.textContent = `
+                :host {
+                    display: block;
+                    max-height: 500px;
+                    overflow: auto;
+                    border: 1px solid #444;
+                    font-family: monospace;
+
+                    overscroll-behavior: contain;
+                    overscroll-behavior: none;
+                }
+
+                table {
+                    /* border-collapse: collapse; */
+                    width: max-content;
+                }
+
+                th, td {
+                    width: 30px;
+                    padding: 4px 6px;
+                    text-align: centre;
+                    white-space: nowrap;
+                    background: #111;
+                    color: #ddd;
+                    font-size: 13px;
+                }
+
+                thead th {
+                    position: sticky;
+                    top: 0;
+                    background: #222;
+                    z-index: 3;
+                }
+
+                .step-col {
+                    position: sticky;
+                    left: 0;
+                    background: #1a1a1a;
+                    z-index: 2;
+                    font-weight: bold;
+                }
+                tfoot td {
+                    height: 50px; 
+                    color: white;
+                    position: sticky;
+                    bottom: 0;
+                    background: #666;
+                }
+                thead .step-col,
+                tfoot .step-col {
+                    z-index: 4;
+                }
+                .step-col, th {
+                    color: white;
+                }
+
+                tr:nth-child(even) td {
+                    background: #181818;
+                }
+    `;
+
+            const table = document.createElement("table");
+
+            // Header
+            const thead = document.createElement("thead");
+            const headerRow = document.createElement("tr");
+
+            const stepHeader = document.createElement("th");
+            stepHeader.textContent = "Step";
+            stepHeader.classList.add("step-col");
+            headerRow.appendChild(stepHeader);
+
+            for (const octave of octaves) {
+                for (const note of notes) {
+                    const th = document.createElement("th");
+                    th.textContent = `${note}${octave}`;
+                    headerRow.appendChild(th);
+                }
+            }
+
+
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Body
+            const tbody = document.createElement("tbody");
+
+            for (let i = 0; i < this.patternLength; i++) {
+                const row = document.createElement("tr");
+
+                const stepCell = document.createElement("td");
+                stepCell.textContent = i.toString().padStart(3, "0");
+                stepCell.classList.add("step-col");
+                row.appendChild(stepCell);
+
+                for (let o = 0; o < octaves.length; o++) {
+                    for (let n = 0; n < notes.length; n++) {
+                        const cell = document.createElement("td");
+                        row.appendChild(cell);
+                    }
+                }
+
+                tbody.appendChild(row);
+            }
+            table.appendChild(tbody);
+
+            const footerRow = document.createElement("tr");
+
+            const footerHeader = document.createElement("td");
+            footerHeader.textContent = "Step";
+            footerHeader.classList.add("step-col");
+            footerRow.appendChild(footerHeader);
+
+            for (const octave of octaves) {
+                for (const note of notes) {
+                    const th = document.createElement("td");
+                    th.textContent = `${note}${octave}`;
+                    footerRow.appendChild(th);
+                }
+            }
+
+            const tfoot = document.createElement("tfoot");
+            tfoot.appendChild(footerRow);
+            table.appendChild(tfoot);
+
+            shadow.appendChild(style);
+            shadow.appendChild(table);
+        }
+    }
+
+    customElements.define("step-note-table", StepNoteTable);
 
     customElements.define('fm-envelope', FMEnvelope);
     const fftSize = 256;
