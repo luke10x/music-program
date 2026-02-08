@@ -481,7 +481,7 @@
         </div>
     </div>
 
-    <step-note-table></step-note-table>
+    <step-note-table length="8" play-head="3"></step-note-table>
 
     <div class="window">
         <div class="window-title">Input</div>
@@ -752,6 +752,15 @@
                 tr:nth-child(even) td.marker-preview-invalid {
                     background: rgba(255, 80, 80, 0.45);
                 }
+
+                tr.play-head td {
+                    background: rgba(255, 170, 40, 0.35) !important;
+                }
+                tr.play-head .step-col {
+                    background: rgba(255, 170, 40, 0.6) !important;
+                    color: #000;
+                    font-weight: bold;
+                }
             `;
 
             const table = document.createElement("table");
@@ -832,13 +841,82 @@
             this.onMouseUp = this.onMouseUp.bind(this);
         }
 
+        static get observedAttributes() {
+            return ["length", "play-head"];
+        }
+        attributeChangedCallback(name, oldValue, newValue) {
+            if (oldValue === newValue) return;
+
+            if (name === "length") {
+                const len = Math.max(1, Number(newValue) || 1);
+                this.patternLength = len;
+                this.rebuildBody();
+                this.renderMarkers();
+                this.updatePlayHead();
+            }
+
+            if (name === "play-head") {
+                this.updatePlayHead();
+            }
+        }
+
         connectedCallback() {
             // this.render();          // build the table, but i dont have this method actually 
             this.attachListeners(); // start listening
 
             // document.addEventListener("mouseup", () => this.onMouseUp());
         }
+        updatePlayHead() {
+            this.clearPlayHead();
 
+            let head = Number(this.getAttribute("play-head"));
+
+            if (Number.isNaN(head) || head < 0) return;
+
+            if (head >= this.patternLength) {
+                head = this.patternLength - 1;
+            }
+
+            const row = this.getRow(head);
+            if (row) row.classList.add("play-head");
+        }
+
+        clearPlayHead() {
+            this.shadowRoot
+                .querySelectorAll("tr.play-head")
+                .forEach(r => r.classList.remove("play-head"));
+        }
+        getRow(step) {
+            return this.shadowRoot
+                .querySelector(`tbody tr[data-step="${step}"]`);
+        }
+
+
+        rebuildBody() {
+            const tbody = this.shadowRoot.querySelector("tbody");
+            tbody.innerHTML = "";
+
+            const notes = 36; // 3 octaves × 12 notes
+
+            for (let i = 0; i < this.patternLength; i++) {
+                const row = document.createElement("tr");
+                row.dataset.step = i;
+
+                const stepCell = document.createElement("td");
+                stepCell.textContent = i.toString().padStart(3, "0");
+                stepCell.classList.add("step-col");
+                row.appendChild(stepCell);
+
+                for (let col = 0; col < notes; col++) {
+                    const cell = document.createElement("td");
+                    cell.dataset.step = i;
+                    cell.dataset.col = col;
+                    row.appendChild(cell);
+                }
+
+                tbody.appendChild(row);
+            }
+        }
         attachListeners() {
 
             // Start drag
@@ -1051,10 +1129,10 @@
         }
     }
 
-
     customElements.define("step-note-table", StepNoteTable);
 
     customElements.define('fm-envelope', FMEnvelope);
+
     const fftSize = 256;
     let ctx;
 
