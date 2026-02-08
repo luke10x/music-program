@@ -669,7 +669,11 @@
                 active: false,
                 column: null,
                 startStep: null,
-                currentStep: null
+                currentStep: null,
+
+                mode: "new",        // "new" | "resize"
+                originalMarker: null,
+                resizeInvalid: false,
             };
 
             const style = document.createElement("style");
@@ -744,6 +748,10 @@
                 tr:nth-child(even) td.marker-final {
                     background: rgba(79, 195, 247, 0.8);
                 }
+                td.marker-preview-invalid,
+                tr:nth-child(even) td.marker-preview-invalid {
+                    background: rgba(255, 80, 80, 0.45);
+                }
             `;
 
             const table = document.createElement("table");
@@ -786,8 +794,8 @@
                 for (let o = 0; o < octaves.length; o++) {
                     for (let n = 0; n < notes.length; n++) {
                         const cell = document.createElement("td");
-                cell.dataset.step = i;
-                cell.dataset.col = n;
+                        cell.dataset.step = i;
+                        cell.dataset.col = n;
                         row.appendChild(cell);
                     }
                 }
@@ -810,7 +818,7 @@
                     footerRow.appendChild(th);
                 }
             }
-    
+
             const tfoot = document.createElement("tfoot");
             tfoot.appendChild(footerRow);
             table.appendChild(tfoot);
@@ -820,8 +828,8 @@
             shadow.appendChild(style);
             shadow.appendChild(table);
             this.onCellMouseDown = this.onCellMouseDown.bind(this);
-            this.onMouseMove     = this.onMouseMove.bind(this);
-            this.onMouseUp       = this.onMouseUp.bind(this);
+            this.onMouseMove = this.onMouseMove.bind(this);
+            this.onMouseUp = this.onMouseUp.bind(this);
         }
 
         connectedCallback() {
@@ -862,21 +870,54 @@
             document.removeEventListener("mousemove", this.onMouseMove);
             document.removeEventListener("mouseup", this.onMouseUp);
         }
-        updatePreview() {
 
+        updatePreview() {
             this.clearPreview();
 
             if (!this._drag.active) return;
 
-            const start = Math.min(this._drag.startStep, this._drag.currentStep);
-            const end   = Math.max(this._drag.startStep, this._drag.currentStep);
+            let start, end;
+
+            if (this._drag.mode === 'resize') {
+                // if (this._drag.resizing) {
+                start = this._drag.originalMarker.start;
+                end = this._drag.currentStep;
+
+                console.log('resizing ', { start, end })
+                if (end < start) {
+                    console.log('invalid detected', { start, end })
+                    // invalid resize zone
+                    this._drag.resizeInvalid = true;
+
+                    return this.renderResizePreview(start, end, true);
+                }
+
+                this._drag.resizeInvalid = false;
+                return this.renderResizePreview(start, end, false);
+            }
+
+            // normal new marker drag
+            start = Math.min(this._drag.startStep, this._drag.currentStep);
+            end = Math.max(this._drag.startStep, this._drag.currentStep);
 
             for (let step = start; step <= end; step++) {
                 const cell = this.getCell(step, this._drag.column);
                 if (cell) cell.classList.add("marker-preview");
             }
         }
+        renderResizePreview(start, end, invalid) {
+            const from = Math.min(start, end);
+            const to = Math.max(start, end);
 
+            for (let step = from; step <= to; step++) {
+                const cell = this.getCell(step, this._drag.column);
+                if (!cell) continue;
+
+                cell.classList.add(
+                    invalid ? "marker-preview-invalid" : "marker-preview"
+                );
+            }
+        }
         renderMarkers() {
             this.clearFinalMarkers();
 
@@ -893,68 +934,119 @@
                 `td[data-step="${step}"][data-col="${col}"]`
             );
         }
-clearPreview() {
-    this.shadowRoot
-        .querySelectorAll(".marker-preview")
-        .forEach(c => c.classList.remove("marker-preview"));
-}
+        clearPreview() {
+            this.shadowRoot
+                .querySelectorAll(".marker-preview")
+                .forEach(c => c.classList.remove("marker-preview"));
+            this.shadowRoot
+                .querySelectorAll(".marker-preview-invalid")
+                .forEach(c => c.classList.remove("marker-preview-invalid"));
+        }
 
-clearFinalMarkers() {
-    this.shadowRoot
-        .querySelectorAll(".marker-final")
-        .forEach(c => c.classList.remove("marker-final"));
-}
+        clearFinalMarkers() {
+            this.shadowRoot
+                .querySelectorAll(".marker-final")
+                .forEach(c => c.classList.remove("marker-final"));
+        }
+        findMarkerAt(step, column) {
+            return this.markers.find(m =>
+                m.column === column &&
+                step >= m.start &&
+                step <= m.end
+            );
+        }
+
         onCellMouseDown(e) {
-            console.log('no mosue down')
             const cell = e.composedPath().find(el =>
-                el.tagName === "TD"
+                el instanceof HTMLTableCellElement
             );
             if (!cell) return;
 
             const step = Number(cell.dataset.step);
             const column = Number(cell.dataset.col);
 
-            this._drag.active = true;
-            this._drag.column = column;
-            this._drag.startStep = step;
-            this._drag.currentStep = step;
+            const marker = this.findMarkerAt(step, column);
 
-            this.updatePreview();
-        } 
+            // ── RESIZE EXISTING MARKER ─────────────────────────────
+            if (marker && step === marker.end) {
 
-        onMouseMove(e) {
-            if (!this._drag.active) return;
+                // remove marker temporarily
+                this.markers = this.markers.filter(m => m !== marker);
+                this.renderMarkers();
 
-            const cell = e.composedPath().find(el =>
-                el.tagName === "TD"
-            );
-            if (!cell) {
-                console.log('not stopping drag i guess')
+                this._drag.active = true;
+                this._drag.mode = "resize";
+                this._drag.column = column;
+                this._drag.startStep = marker.start;
+                this._drag.currentStep = step;
+                this._drag.originalMarker = marker;
+
                 return;
             }
 
-            if (!cell.dataset.step) return;
-
-            const step = Number(cell.dataset.step);
+            // ── CREATE NEW MARKER ──────────────────────────────────
+            this._drag.active = true;
+            this._drag.mode = "new";
+            this._drag.column = column;
+            this._drag.startStep = step;
             this._drag.currentStep = step;
+            this._drag.originalMarker = null;
 
             this.updatePreview();
         }
 
+        onMouseMove(e) {
+            if (!this._drag.active) return;
+
+            const table = this.shadowRoot.querySelector("table");
+            const rect = table.getBoundingClientRect();
+
+            const rowHeight = table.querySelector("tbody tr").offsetHeight;
+
+            const y = e.clientY - rect.top - table.querySelector("thead").offsetHeight;
+
+            const step = Math.floor(y / rowHeight);
+
+            if (step < 0) {
+                this._drag.currentStep = -1; // force invalid
+            } else if (step >= this.patternLength) {
+                this._drag.currentStep = this.patternLength - 1;
+            } else {
+                this._drag.currentStep = step;
+            }
+            // TODO add here being blocked to move if another marker is on the way
+
+            this.updatePreview();
+        }
         onMouseUp() {
             if (!this._drag.active) return;
 
-            const start = Math.min(this._drag.startStep, this._drag.currentStep);
-            const end   = Math.max(this._drag.startStep, this._drag.currentStep);
+            if (this._drag.mode === 'resize') {
+                // if (this._drag.resizing) {
+                if (true || !this._drag.resizeInvalid) {
+                    this.markers.push({
+                        column: this._drag.column,
+                        start: this._drag.originalMarker.start,
+                        end: this._drag.currentStep
+                    });
+                }
+                // else: marker is discarded
+            } else {
+                const start = Math.min(this._drag.startStep, this._drag.currentStep);
+                const end = Math.max(this._drag.startStep, this._drag.currentStep);
 
-            this.markers.push({
-                column: this._drag.column,
-                start,
-                end
-            });
+                this.markers.push({
+                    column: this._drag.column,
+                    start,
+                    end
+                });
+            }
 
             this._drag.active = false;
+            this._drag.resizing = false;
+            this._drag.resizeInvalid = false;
 
+            this.clearPreview();
             this.renderMarkers();
         }
     }
