@@ -517,6 +517,8 @@
 
     welcomeScreenCloser.addEventListener('click', () => {
         initAudio();
+        console.log("Starting sequencer");
+        startSequencer(stepNoteTable);
         overlay.style.display = 'none';
     });
 
@@ -759,18 +761,22 @@
                     background: rgba(255, 80, 80, 0.45);
                 }
 
+                tr.play-head .step-col,
                 tr:nth-child(even).play-head .step-col {
                     background: rgba(255, 170, 40, 0.6) !important;
                     color: #000;
                     font-weight: bold;
                 }
+                tr.play-head td,
                 tr:nth-child(even).play-head td {
                     background: rgba(255, 170, 40, 0.35) !important;
                 }
-                tr.play-head td.marker-final {
+                tr.play-head td.marker-final,
+                tr:nth-child(even).play-head td.marker-final {
                     background: rgba(180, 170, 180, 0.35) !important;
                 }
-                tr.play-head td.marker-preview {
+                tr.play-head td.marker-preview,
+                tr:nth-child(even).play-head td.marker-preview {
                     background: rgba(180, 170, 180, 0.35) !important;
                 }
                 tr.play-head td.marker-preview-invalid,
@@ -833,6 +839,42 @@
             this.onCellMouseDown = this.onCellMouseDown.bind(this);
             this.onMouseMove = this.onMouseMove.bind(this);
             this.onMouseUp = this.onMouseUp.bind(this);
+
+            this._length = 16;
+            this._playHead = -1;
+        }
+
+        get patternLength() {
+            return this._length;
+        }
+
+        set patternLength(value) {
+            const len = Math.max(1, Number(value) || 1);
+
+            if (len === this._length) return;
+
+            this._length = len;
+            this.setAttribute("length", len);
+        }
+
+        get playHead() {
+            return this._playHead;
+        }
+
+        set playHead(value) {
+
+            const v = Number(value);
+
+            if (v === -1) {
+                this._playHead = -1;
+                this.setAttribute("play-head", -1);
+                return;
+            }
+
+            if (v >= 0 && v < this._length) {
+                this._playHead = v;
+                this.setAttribute("play-head", v);
+            }
         }
 
         static get observedAttributes() {
@@ -939,10 +981,7 @@
                 start = this._drag.originalMarker.start;
                 end = this._drag.currentStep;
 
-                console.log('resizing ', { start, end })
                 if (end < start) {
-                    console.log('invalid detected', { start, end })
-                    // invalid resize zone
                     this._drag.resizeInvalid = true;
 
                     return this.renderResizePreview(start, end, true);
@@ -974,11 +1013,14 @@
                 );
             }
         }
+
         renderMarkers() {
             this.clearFinalMarkers();
 
             for (const m of this.markers) {
-                for (let step = m.start; step <= m.end; step++) {
+                const start = Math.min(m.start, m.end);
+                const end = Math.max(m.start, m.end);
+                for (let step = start; step <= end; step++) {
                     const cell = this.getCell(step, m.column);
                     if (cell) cell.classList.add("marker-final");
                 }
@@ -990,6 +1032,7 @@
                 `td[data-step="${step}"][data-col="${col}"]`
             );
         }
+
         clearPreview() {
             this.shadowRoot
                 .querySelectorAll(".marker-preview")
@@ -1004,6 +1047,7 @@
                 .querySelectorAll(".marker-final")
                 .forEach(c => c.classList.remove("marker-final"));
         }
+
         findMarkerAt(step, column) {
             return this.markers.find(m =>
                 m.column === column &&
@@ -1074,6 +1118,7 @@
 
             this.updatePreview();
         }
+
         onMouseUp() {
             if (!this._drag.active) return;
 
@@ -1104,6 +1149,24 @@
 
             this.clearPreview();
             this.renderMarkers();
+        }
+
+        getNoteAtColumn(column) {
+            if (typeof column !== "number") return null;
+            if (column < 0) return null;
+
+            const notesPerOctave = this.notes.length;
+            const totalColumns = this.octaves.length * notesPerOctave;
+
+            if (column >= totalColumns) return null;
+
+            const octaveIndex = Math.floor(column / notesPerOctave);
+            const noteIndex = column % notesPerOctave;
+
+            return {
+                note: this.notes[noteIndex],
+                octave: this.octaves[octaveIndex]
+            };
         }
     }
 
@@ -1218,6 +1281,134 @@
         ],
     };
 
+    const TickRate = 60;    // ticks per second
+    const ticksPerStep = 24; // tracker style "speed"
+    const secondsPerTick = 1 / TickRate;
+    const secondsPerStep = ticksPerStep * secondsPerTick;
+
+    let nextPatternStartTime = 0;
+    let isPlaying = false;
+    let activeNote = null; // currently sounding marker
+
+    function patternDuration(patternLength) {
+        return patternLength * secondsPerStep;
+    }
+
+    function startSequencer(stepNoteTable) {
+        const now = ctx.currentTime;
+
+        nextPatternStartTime = now + 0.1; // small safety offset
+        isPlaying = true;
+
+        schedulePattern(stepNoteTable, nextPatternStartTime);
+
+        startVisualClock(stepNoteTable);
+        startAudioLookahead(stepNoteTable);
+    }
+
+    let tickCounter = 0;
+    let visualInterval = null;
+    function startVisualClock(stepNoteTable) {
+        console.log("Visual clock started");
+
+        visualInterval = setInterval(() => {
+            if (!isPlaying) return;
+
+            tickCounter++;
+
+            const step = Math.floor(tickCounter / ticksPerStep)
+                % stepNoteTable.patternLength;
+
+            stepNoteTable.playHead = step;
+
+        }, 1000 / TickRate);
+    }
+
+    let schedulerInterval = null;
+    const scheduleAheadTime = 0.2; // seconds
+
+    function startAudioLookahead(stepNoteTable) {
+
+        schedulerInterval = setInterval(() => {
+
+            const now = ctx.currentTime;
+
+            if (nextPatternStartTime < now + scheduleAheadTime) {
+
+                schedulePattern(stepNoteTable, nextPatternStartTime);
+
+                nextPatternStartTime += patternDuration(
+                    stepNoteTable.patternLength
+                );
+            }
+
+        }, 25);
+    }
+
+    function schedulePattern(stepNoteTable, patternStartTime) {
+
+        const markers = stepNoteTable.markers;
+
+        for (const marker of markers) {
+            const start = Math.min(marker.start, marker.end);
+            const end = Math.max(marker.start, marker.end);
+
+            const noteStart =
+                patternStartTime +
+                start * secondsPerStep;
+
+            const markerLen = end - start + 1;
+            const noteEnd =
+                noteStart +
+                markerLen * secondsPerStep;
+
+            const { note, octave } = stepNoteTable.getNoteAtColumn(marker.column);
+            scheduleNote(note, octave, noteStart, noteEnd);
+        }
+    }
+
+    function scheduleNote(note, octave, whenStart, whenEnd) {
+        if (!whenStart) {
+            throw Error("Cannot schedule not with undefinety whenStart");
+        }
+        const baseFreq = noteToFrequency(note, octave);
+
+        // If another note is still active at this time
+        if (activeNote && whenStart < activeNote.endTime) {
+            console.warn("Polyphony not supported. Replacing active note.");
+        }
+
+        activeNote = {
+            endTime: whenEnd
+        };
+
+        // Set operator frequencies
+        for (let i = 0; i < 4; i++) {
+            const mul = mts[i] === 0 ? 0.5 : mts[i];
+            let freq = baseFreq * mul;
+            freq = applyDetuneYM(freq, dts[i]);
+            ops[i].frequency.setValueAtTime(freq, whenStart);
+        }
+
+        // Press
+        for (let i = 0; i < 4; i++) {
+            const opGain = opGains[i];
+            const env = envs[i].params;
+            const tl = Math.max(0.001, peaks[i] / 100);
+
+            if (i === 3) {
+                onNotePress(whenStart, opGain, env, tl);
+            } else {
+                const fmDepth = tl * tl * 1200;
+                onNotePress(whenStart, opGain, env, fmDepth);
+            }
+        }
+
+        // Release
+        for (let i = 0; i < 4; i++) {
+            onNoteRelease(whenEnd, opGains[i], envs[i].params);
+        }
+    }
     function initAudio(algorithmName = "algo0") {
         ctx = new AudioContext();
 
@@ -1318,8 +1509,7 @@
             return SL / 15;
         }
 
-        function onNotePress(opGain, env, peak = 1.0) {
-            const now = ctx.currentTime;
+        function onNotePress(when, opGain, env, peak = 1.0) {
 
             const atk = ARtoTime(env.AR);
             const dec = DRtoTime(env.DR);
@@ -1327,39 +1517,38 @@
             const susTime = SRtoTime(env.SR);
 
             const g = opGain.gain;
-            g.cancelScheduledValues(now);
-            g.setValueAtTime(0, now);
+            g.cancelScheduledValues(when);
+            g.setValueAtTime(0, when);
 
             // Attack
-            g.linearRampToValueAtTime(Math.max(0.001, peak), now + atk);
+            g.linearRampToValueAtTime(Math.max(0.001, peak), when + atk);
 
             // Decay to sustain level
             g.linearRampToValueAtTime(
                 Math.max(0.001, peak * susLvl),
-                now + atk + dec
+                when + atk + dec
             );
 
             // Sustain decay (SR)
             if (env.SR > 0) {
                 g.linearRampToValueAtTime(
                     0.001,
-                    now + atk + dec + susTime
+                    when + atk + dec + susTime
                 );
             }
             // else SR=0 -> hold forever
         }
 
-        function onNoteRelease(opGain, env) {
-            const now = ctx.currentTime;
+        function onNoteRelease(when, opGain, env) {
             const relTime = RRtoTime(env.RR);
 
             const g = opGain.gain;
 
             // Stop whatever the envelope was doing
-            g.cancelScheduledValues(now);
+            g.cancelScheduledValues(when);
 
             // Release to silence
-            g.linearRampToValueAtTime(0.001, now + relTime);
+            g.linearRampToValueAtTime(0.001, when + relTime);
             setTimeout(() => {
                 drawScope(); // One last time when graph is still
             }, relTime * 1_000 + 100);
@@ -1411,7 +1600,7 @@
         const noteIndex = notes.indexOf(note);
 
         if (noteIndex === -1) {
-            throw new Error("Invalid note name. Use sharps (#) or flats (b), e.g., 'C#' or 'Eb'.");
+            throw new Error("Invalid note name: '" + note + "'. Use sharps (#) or flats (b), e.g., 'C#' or 'Eb'.");
         }
 
         // Calculate the semitone difference from A4
@@ -1420,7 +1609,6 @@
 
         // Calculate the frequency using the formula
         const frequency = 440 * Math.pow(2, semitoneDiff / 12);
-        console.log({ note, octave, frequency });
 
         return frequency;
     }
@@ -1458,20 +1646,23 @@
 
                 if (i === 3) {
                     // Carrier or unused ops: normal amplitude
-                    onNotePress(opGain, env.params, tl);
+                    onNotePress(now, opGain, env.params, tl);
                 } else {
                     const fmDepth = tl * tl * 1200;
-                    onNotePress(opGain, env.params, fmDepth);
+                    onNotePress(now, opGain, env.params, fmDepth);
                 }
             }
         });
 
         button.addEventListener('mouseup', () => {
+            const now = ctx.currentTime;
             for (let i = 0; i < 4; i++) {
-                onNoteRelease(opGains[i], envs[i].params);
+                onNoteRelease(now, opGains[i], envs[i].params);
             }
         });
-    })
+    });
+
+    const stepNoteTable = document.querySelector('step-note-table');
 </script>
 
 </html>
