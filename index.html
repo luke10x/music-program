@@ -918,11 +918,12 @@
 
                 row.appendChild(stepCell);
 
+                const NOTES_PER_OCTAVE = 12;
                 for (let o = 0; o < this.octaves.length; o++) {
                     for (let n = 0; n < this.notes.length; n++) {
                         const cell = document.createElement("td");
                         cell.dataset.step = i;
-                        cell.dataset.col = n;
+                        cell.dataset.col = n + o * NOTES_PER_OCTAVE;
                         row.appendChild(cell);
                     }
                 }
@@ -1306,23 +1307,30 @@
         startAudioLookahead(stepNoteTable);
     }
 
-    let tickCounter = 0;
     let visualInterval = null;
-    function startVisualClock(stepNoteTable) {
-        console.log("Visual clock started");
+let playStartTime = 0;
 
-        visualInterval = setInterval(() => {
-            if (!isPlaying) return;
+function startVisualClock(stepNoteTable) {
 
-            tickCounter++;
+    const now = ctx.currentTime;
+    playStartTime = now;
 
-            const step = Math.floor(tickCounter / ticksPerStep)
-                % stepNoteTable.patternLength;
+    visualInterval = setInterval(() => {
 
-            stepNoteTable.playHead = step;
+        if (!isPlaying) return;
 
-        }, 1000 / TickRate);
-    }
+        const now = ctx.currentTime;
+        const elapsed = now - playStartTime;
+
+        const ticksElapsed = elapsed * TickRate;
+
+        const step = Math.floor(ticksElapsed / ticksPerStep)
+            % stepNoteTable.patternLength;
+
+        stepNoteTable.playHead = step;
+
+    }, 1000 / TickRate);
+}
 
     let schedulerInterval = null;
     const scheduleAheadTime = 0.2; // seconds
