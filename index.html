@@ -1124,8 +1124,7 @@
             if (!this._drag.active) return;
 
             if (this._drag.mode === 'resize') {
-                // if (this._drag.resizing) {
-                if (true || !this._drag.resizeInvalid) {
+                if (!this._drag.resizeInvalid) {
                     this.markers.push({
                         column: this._drag.column,
                         start: this._drag.originalMarker.start,
