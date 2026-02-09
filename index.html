@@ -183,6 +183,10 @@
             stroke-width: 3;
             fill-opacity: 0.8;
         }
+
+        step-note-table {
+            width: 850px;
+        }
     </style>
 </head>
 
@@ -654,14 +658,15 @@
     }
 
     class StepNoteTable extends HTMLElement {
-        patternLength = 16;
+        patternLength = this.getAttribute('length') || 16;
+
+        notes = ["C", "C#", "D", "D#", "E", "F",
+            "F#", "G", "G#", "A", "A#", "B"];
+        octaves = [4, 5];
+
         constructor() {
             super();
             const shadow = this.attachShadow({ mode: "open" });
-
-            const notes = ["C", "C#", "D", "D#", "E", "F",
-                "F#", "G", "G#", "A", "A#", "B"];
-            const octaves = [4, 5];
 
             this.markers = [];   // ← all finalised markers
 
@@ -699,6 +704,7 @@
 
                 th, td {
                     width: 30px;
+                    height: 30px;
                     padding: 4px 6px;
                     text-align: centre;
                     white-space: nowrap;
@@ -753,13 +759,23 @@
                     background: rgba(255, 80, 80, 0.45);
                 }
 
-                tr.play-head td {
-                    background: rgba(255, 170, 40, 0.35) !important;
-                }
-                tr.play-head .step-col {
+                tr:nth-child(even).play-head .step-col {
                     background: rgba(255, 170, 40, 0.6) !important;
                     color: #000;
                     font-weight: bold;
+                }
+                tr:nth-child(even).play-head td {
+                    background: rgba(255, 170, 40, 0.35) !important;
+                }
+                tr.play-head td.marker-final {
+                    background: rgba(180, 170, 180, 0.35) !important;
+                }
+                tr.play-head td.marker-preview {
+                    background: rgba(180, 170, 180, 0.35) !important;
+                }
+                tr.play-head td.marker-preview-invalid,
+                tr:nth-child(even).play-head td.marker-preview-invalid {
+                    background: rgba(255, 80, 180, 0.45) !important;
                 }
             `;
 
@@ -774,14 +790,13 @@
             stepHeader.classList.add("step-col");
             headerRow.appendChild(stepHeader);
 
-            for (const octave of octaves) {
-                for (const note of notes) {
+            for (const octave of this.octaves) {
+                for (const note of this.notes) {
                     const th = document.createElement("th");
                     th.textContent = `${note}${octave}`;
                     headerRow.appendChild(th);
                 }
             }
-
 
             thead.appendChild(headerRow);
             table.appendChild(thead);
@@ -789,28 +804,7 @@
             // Body
             const tbody = document.createElement("tbody");
 
-            for (let i = 0; i < this.patternLength; i++) {
-                const row = document.createElement("tr");
-
-                const stepCell = document.createElement("td");
-                stepCell.textContent = i.toString().padStart(3, "0");
-                stepCell.classList.add("step-col");
-
-
-
-                row.appendChild(stepCell);
-
-                for (let o = 0; o < octaves.length; o++) {
-                    for (let n = 0; n < notes.length; n++) {
-                        const cell = document.createElement("td");
-                        cell.dataset.step = i;
-                        cell.dataset.col = n;
-                        row.appendChild(cell);
-                    }
-                }
-
-                tbody.appendChild(row);
-            }
+            this.rebuildBody(tbody);
             table.appendChild(tbody);
 
             const footerRow = document.createElement("tr");
@@ -820,8 +814,8 @@
             footerHeader.classList.add("step-col");
             footerRow.appendChild(footerHeader);
 
-            for (const octave of octaves) {
-                for (const note of notes) {
+            for (const octave of this.octaves) {
+                for (const note of this.notes) {
                     const th = document.createElement("td");
                     th.textContent = `${note}${octave}`;
                     footerRow.appendChild(th);
@@ -844,13 +838,15 @@
         static get observedAttributes() {
             return ["length", "play-head"];
         }
+
         attributeChangedCallback(name, oldValue, newValue) {
             if (oldValue === newValue) return;
 
             if (name === "length") {
                 const len = Math.max(1, Number(newValue) || 1);
                 this.patternLength = len;
-                this.rebuildBody();
+                const tbody = this.shadowRoot.querySelector("tbody");
+                this.rebuildBody(tbody);
                 this.renderMarkers();
                 this.updatePlayHead();
             }
@@ -861,11 +857,38 @@
         }
 
         connectedCallback() {
-            // this.render();          // build the table, but i dont have this method actually 
-            this.attachListeners(); // start listening
-
-            // document.addEventListener("mouseup", () => this.onMouseUp());
+            this.attachListeners();
         }
+
+        disconnectedCallback() {
+            this.detachListeners();
+        }
+
+        rebuildBody(tbody) {
+            tbody.innerHTML = '';
+            for (let i = 0; i < this.patternLength; i++) {
+                const row = document.createElement("tr");
+                row.dataset.step = i;
+
+                const stepCell = document.createElement("td");
+                stepCell.textContent = i.toString().padStart(3, "0");
+                stepCell.classList.add("step-col");
+
+                row.appendChild(stepCell);
+
+                for (let o = 0; o < this.octaves.length; o++) {
+                    for (let n = 0; n < this.notes.length; n++) {
+                        const cell = document.createElement("td");
+                        cell.dataset.step = i;
+                        cell.dataset.col = n;
+                        row.appendChild(cell);
+                    }
+                }
+
+                tbody.appendChild(row);
+            }
+        }
+
         updatePlayHead() {
             this.clearPlayHead();
 
@@ -886,63 +909,18 @@
                 .querySelectorAll("tr.play-head")
                 .forEach(r => r.classList.remove("play-head"));
         }
+
         getRow(step) {
             return this.shadowRoot
                 .querySelector(`tbody tr[data-step="${step}"]`);
         }
 
-
-        rebuildBody() {
-            const tbody = this.shadowRoot.querySelector("tbody");
-            tbody.innerHTML = "";
-
-            const notes = 36; // 3 octaves × 12 notes
-
-            for (let i = 0; i < this.patternLength; i++) {
-                const row = document.createElement("tr");
-                row.dataset.step = i;
-
-                const stepCell = document.createElement("td");
-                stepCell.textContent = i.toString().padStart(3, "0");
-                stepCell.classList.add("step-col");
-                row.appendChild(stepCell);
-
-                for (let col = 0; col < notes; col++) {
-                    const cell = document.createElement("td");
-                    cell.dataset.step = i;
-                    cell.dataset.col = col;
-                    row.appendChild(cell);
-                }
-
-                tbody.appendChild(row);
-            }
-        }
         attachListeners() {
-
-            // Start drag
             this.addEventListener("mousedown", this.onCellMouseDown);
-
-            // Track drag
             document.addEventListener("mousemove", this.onMouseMove);
-
-            // End drag
             document.addEventListener("mouseup", this.onMouseUp);
         }
 
-        disconnectedCallback() {
-            this.detachListeners(); // clean up properly
-        }
-        attachListeners() {
-
-            // Start drag
-            this.addEventListener("mousedown", this.onCellMouseDown);
-
-            // Track drag
-            document.addEventListener("mousemove", this.onMouseMove);
-
-            // End drag
-            document.addEventListener("mouseup", this.onMouseUp);
-        }
         detachListeners() {
             this.removeEventListener("mousedown", this.onCellMouseDown);
             document.removeEventListener("mousemove", this.onMouseMove);
