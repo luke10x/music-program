@@ -959,15 +959,15 @@
         }
 
         attachListeners() {
-            this.addEventListener("mousedown", this.onCellMouseDown);
-            document.addEventListener("mousemove", this.onMouseMove);
-            document.addEventListener("mouseup", this.onMouseUp);
+            this.addEventListener("pointerdown", this.onCellMouseDown);
+            document.addEventListener("pointermove", this.onMouseMove);
+            document.addEventListener("pointerup", this.onMouseUp);
         }
 
         detachListeners() {
-            this.removeEventListener("mousedown", this.onCellMouseDown);
-            document.removeEventListener("mousemove", this.onMouseMove);
-            document.removeEventListener("mouseup", this.onMouseUp);
+            this.removeEventListener("pointerdown", this.onCellMouseDown);
+            document.removeEventListener("pointermove", this.onMouseMove);
+            document.removeEventListener("pointerup", this.onMouseUp);
         }
 
         updatePreview() {
@@ -1308,29 +1308,29 @@
     }
 
     let visualInterval = null;
-let playStartTime = 0;
+    let playStartTime = 0;
 
-function startVisualClock(stepNoteTable) {
-
-    const now = ctx.currentTime;
-    playStartTime = now;
-
-    visualInterval = setInterval(() => {
-
-        if (!isPlaying) return;
+    function startVisualClock(stepNoteTable) {
 
         const now = ctx.currentTime;
-        const elapsed = now - playStartTime;
+        playStartTime = now;
 
-        const ticksElapsed = elapsed * TickRate;
+        visualInterval = setInterval(() => {
 
-        const step = Math.floor(ticksElapsed / ticksPerStep)
-            % stepNoteTable.patternLength;
+            if (!isPlaying) return;
 
-        stepNoteTable.playHead = step;
+            const now = ctx.currentTime;
+            const elapsed = now - playStartTime;
 
-    }, 1000 / TickRate);
-}
+            const ticksElapsed = elapsed * TickRate;
+
+            const step = Math.floor(ticksElapsed / ticksPerStep)
+                % stepNoteTable.patternLength;
+
+            stepNoteTable.playHead = step;
+
+        }, 1000 / TickRate);
+    }
 
     let schedulerInterval = null;
     const scheduleAheadTime = 0.2; // seconds
@@ -1405,16 +1405,16 @@ function startVisualClock(stepNoteTable) {
             const tl = Math.max(0.001, peaks[i] / 100);
 
             if (i === 3) {
-                onNotePress(whenStart, opGain, env, tl);
+                startToPlayEnvelope(whenStart, opGain, env, tl);
             } else {
                 const fmDepth = tl * tl * 1200;
-                onNotePress(whenStart, opGain, env, fmDepth);
+                startToPlayEnvelope(whenStart, opGain, env, fmDepth);
             }
         }
 
         // Release
         for (let i = 0; i < 4; i++) {
-            onNoteRelease(whenEnd, opGains[i], envs[i].params);
+            endToPlayEnvelope(whenEnd, opGains[i], envs[i].params);
         }
     }
     function initAudio(algorithmName = "algo0") {
@@ -1517,7 +1517,7 @@ function startVisualClock(stepNoteTable) {
             return SL / 15;
         }
 
-        function onNotePress(when, opGain, env, peak = 1.0) {
+        function startToPlayEnvelope(when, opGain, env, peak = 1.0) {
 
             const atk = ARtoTime(env.AR);
             const dec = DRtoTime(env.DR);
@@ -1547,7 +1547,7 @@ function startVisualClock(stepNoteTable) {
             // else SR=0 -> hold forever
         }
 
-        function onNoteRelease(when, opGain, env) {
+        function endToPlayEnvelope(when, opGain, env) {
             const relTime = RRtoTime(env.RR);
 
             const g = opGain.gain;
@@ -1632,40 +1632,44 @@ function startVisualClock(stepNoteTable) {
         return baseFreq * (1 + sign * magnitude * epsilon);
     }
 
+    function startToPlayNote(note, octave) {
+        const baseFreq = noteToFrequency(note, octave);
+        const now = ctx.currentTime;
+
+        for (let i = 0; i < 4; i++) {
+            const mul = mts[i] === 0 ? 0.5 : mts[i];
+            let freq = baseFreq * mul;
+            freq = applyDetuneYM(freq, dts[i]);
+
+            ops[i].frequency.setValueAtTime(freq, now);
+        }
+
+        for (let i = 0; i < 4; i++) {
+            const opGain = opGains[i];
+            const env = envs[i];
+            const tl = Math.max(0.001, peaks[i] / 100);
+
+            if (i === 3) {
+                // Carrier or unused ops: normal amplitude
+                startToPlayEnvelope(now, opGain, env.params, tl);
+            } else {
+                const fmDepth = tl * tl * 1200;
+                startToPlayEnvelope(now, opGain, env.params, fmDepth);
+            }
+        }
+    }
     document.querySelectorAll('button.note-key').forEach(button => {
-        button.addEventListener('mousedown', () => {
+        button.addEventListener('pointerdown', () => {
             const note = button.dataset.note;
             const octave = button.dataset.octave;
-            const baseFreq = noteToFrequency(note, octave);
-            const now = ctx.currentTime;
 
-            for (let i = 0; i < 4; i++) {
-                const mul = mts[i] === 0 ? 0.5 : mts[i];
-                let freq = baseFreq * mul;
-                freq = applyDetuneYM(freq, dts[i]);
-
-                ops[i].frequency.setValueAtTime(freq, now);
-            }
-
-            for (let i = 0; i < 4; i++) {
-                const opGain = opGains[i];
-                const env = envs[i];
-                const tl = Math.max(0.001, peaks[i] / 100);
-
-                if (i === 3) {
-                    // Carrier or unused ops: normal amplitude
-                    onNotePress(now, opGain, env.params, tl);
-                } else {
-                    const fmDepth = tl * tl * 1200;
-                    onNotePress(now, opGain, env.params, fmDepth);
-                }
-            }
+            startToPlayNote(note, octave);
         });
 
-        button.addEventListener('mouseup', () => {
+        button.addEventListener('pointerup', () => {
             const now = ctx.currentTime;
             for (let i = 0; i < 4; i++) {
-                onNoteRelease(now, opGains[i], envs[i].params);
+                endToPlayEnvelope(now, opGains[i], envs[i].params);
             }
         });
     });
