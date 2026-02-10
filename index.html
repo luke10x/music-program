@@ -694,6 +694,8 @@
 
                     overscroll-behavior: contain;
                     overscroll-behavior: none;
+
+                    touch-action: pan-x pan-y;
                 }
 
                 table {
@@ -831,6 +833,9 @@
             const tfoot = document.createElement("tfoot");
             tfoot.appendChild(footerRow);
             table.appendChild(tfoot);
+
+            // TODO here add keys
+            const c4 = document.createElement("td");
 
             this.table = table;
 
